@@ -1,20 +1,14 @@
-#adpated from juypter notebook
-#added additional analysis from sambomics video and put all treatment groups together 
-#Removed clustering and cell typing so it is just QC
-#Changed
+# Normalizes data, runs Harmony batch correction and saves dataset in integrated.h5ad
+# Takes in input .h5ad file from QC_per_sample.py
 
 import matplotlib.pyplot as plt
-import scanpy #as sc
+import scanpy
 import os
 import glob
 from scipy.sparse import csr_matrix
-# from scipy.io import mmread
-import pandas as pd
 import argparse
-# Only pandas >= v0.25.0 supports column names with spaces in querys
 import warnings
 warnings.filterwarnings("ignore") 
-
 
 
 # Define the parser
@@ -37,80 +31,65 @@ print("Neighbors number PCS: ", args.Neighbors_N_PCS)
 print("Output folder: ", args.out_dir)
 print("***********************")
 
-
-# #converts a matrix to a list
-# def flatten(matrix):
-#     return [str(item) for row in matrix for item in row]
-
-#Turns tuples into a dictionary
+# Turns tuples into a dictionary
 def Convert(tup, di):
     for a, b in tup:
         di[a] = b
     return di
 
+# Normalizes and batch corrects
 def intergrated_dataset_qc(adata, HVG_num_top_genes, PCA_N_Comps, Neighbors_Number, Neighbors_N_PCS, out_dir):
     print(adata)
     adata.X = csr_matrix(adata.X)
 
     adata.layers["counts"] = adata.X.copy()
 
-    #Normalization
+    # Normalization
     print("\nNormalizing data... ")
     scanpy.pp.normalize_total(adata, target_sum=1e4)
     scanpy.pp.log1p(adata)
 
     adata.raw = adata
 
-    #Umap plot for samples
+    # Set up code for batch correction
     print("\nApplying batch correction... ")
     scanpy.pp.highly_variable_genes(adata, n_top_genes=HVG_num_top_genes)
     scanpy.tl.pca(adata, svd_solver='arpack', use_highly_variable=True, n_comps=PCA_N_Comps)
     scanpy.pp.neighbors(adata, n_neighbors=Neighbors_Number, n_pcs=Neighbors_N_PCS)
     scanpy.tl.umap(adata)
+
+    # Plots UMAP without batch correction
     with plt.rc_context():
         fig, ax = plt.subplots(figsize=(10, 7))
         scanpy.pl.umap(adata, color='sample_id', ax=ax)
         plt.savefig(out_dir+"sample_id_clustering.png", bbox_inches='tight')
-
     with plt.rc_context():
         fig, ax = plt.subplots(figsize=(10, 7))
         scanpy.pl.umap(adata, color='batch', ax=ax)
         plt.savefig(out_dir+"batch_clustering.png", bbox_inches='tight')
 
+    # Runs Harmony batch correction
     scanpy.external.pp.harmony_integrate(adata, 'sample_id', adjusted_basis='X_pca', max_iter_harmony=50)
-    print(adata)
     scanpy.pp.neighbors(adata, n_neighbors=Neighbors_Number, n_pcs=Neighbors_N_PCS)
     scanpy.tl.umap(adata)
 
+    # Plots UMAP without batch correction
     with plt.rc_context():
         fig, ax = plt.subplots(figsize=(10, 7))
         scanpy.pl.umap(adata, color='sample_id', ax=ax)
         plt.savefig(out_dir+"sample_id_clustering_batch_effect_corrected.png",bbox_inches='tight')
-
     with plt.rc_context():
         fig, ax = plt.subplots(figsize=(10, 7))
         scanpy.pl.umap(adata, color='batch', ax=ax)
         plt.savefig(out_dir+"batch_clustering_batch_effect_corrected.png",bbox_inches='tight')
 
-
-    adata.obs['condition'] = adata.obs['condition'].astype('category')
-    sample_means = pd.DataFrame(adata.to_df()).groupby(adata.obs['condition']).mean()
-    adata_sample = scanpy.AnnData(X=sample_means.values)
-    adata_sample.obs['condition'] = sample_means.index
-    print(adata_sample)
-    scanpy.tl.pca(adata_sample)
-
+    # Plots varaince ratio of PCA components
     with plt.rc_context():
         fig, ax = plt.subplots(figsize=(10, 7))
-        scanpy.pl.pca(adata_sample, color='condition', ax=ax, size=1)
-        plt.savefig(out_dir+"PCA_1_PCA_2.png",bbox_inches='tight')
+        scanpy.pl.pca_variance_ratio(adata, log=True)
+        plt.savefig(out_dir+"variance_ratio_PCA.png",bbox_inches='tight')
 
-    with plt.rc_context():
-        fig, ax = plt.subplots(figsize=(10, 7))
-        scanpy.pl.pca(adata, color="condition", size=200)
-        plt.savefig(out_dir+"Condition_PCA.png")
-
-
+    print("\nWriting dataset to integrated.h5ad ...")
     adata.write_h5ad(out_dir+'integrated.h5ad')
 
 
