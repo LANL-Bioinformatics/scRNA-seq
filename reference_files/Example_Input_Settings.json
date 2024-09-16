@@ -1,11 +1,12 @@
 {
-    "Cluster_Resolution": 0.4,
-    "Min_Cells_per_Gene": 3, 
-    "Min_Genes_per_Cell": 200,
-    "Mitochondrial_Content_Max": 20,
-    "HVG_Num_Top_Genes": 5000,
-    "PCA_N_Comps": 20,
-    "Neighbors_Number": 30,
-    "Neighbors_N_PCS": 20,
-    "Output_Folder": "/panfs/biopan04/unr_thailand/unr_analysis/figs/analysis_v2/covid"
+    "sampleInfo":"../reference_files/Example_Input.json",
+    "clusterResolution": 0.4,
+    "minCellsPerGene": 3, 
+    "minGenesPerCell": 200,
+    "mitochondrialContentMax": 20,
+    "hvgNumTopGenes": 5000,
+    "pcaNcomps": 20,
+    "neighborsNumber": 30,
+    "neighborsNpcs": 20,
+    "outputFolder": "example_output"
 }
