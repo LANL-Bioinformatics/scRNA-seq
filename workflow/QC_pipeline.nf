@@ -2,7 +2,8 @@
 
 import groovy.json.JsonSlurper
 
-//takes qc-filtered h5ad files 
+//takes qc-filtered h5ad files. 
+//Produces a series of graphs and integrated.h5ad file with all samples combined, normalized, and batch corrected
 process integrated_dataset_qc {
     publishDir(
         path: "${params.outputFolder}",
@@ -35,6 +36,8 @@ process integrated_dataset_qc {
     """
 }
 
+//takes qc-filtered h5ad files.
+//Produces a series of plots comparing the samples inside each treatment/outcome group.
 process plots_across_groups_qc {
     publishDir(
         path: "${params.outputFolder}",
@@ -55,6 +58,8 @@ process plots_across_groups_qc {
     """
 }
 
+//takes in one sample (h5 or mtx/tsv files) and associated metadata.
+//Runs sample-specific QC and outputs h5ad files that preserve annotation
 process per_sample_qc {
     publishDir(
         path: "${params.outputFolder}",
