@@ -3,6 +3,7 @@
 ### Individual sample QC
 ### Including removal of ambient RNA, doublets, cell/gene/mitochondrial content filtering 
 import sys
+import os
 import numpy as np
 import matplotlib.pyplot as plt
 import scanpy
@@ -128,7 +129,7 @@ def quaility_analysis(adata, sample, raw_file_name, raw_file_name_type, cluster_
     # Plot the cells in the 2D PCA projection
     fig, ax = plt.subplots(figsize=(10, 7))
     ax.scatter(X[:,0], X[:,1], alpha=0.5, c="green")
-    plt.savefig(out_dir + "/" + prefix +"_2D_PCA_projection.png")
+    plt.savefig(os.path.join(out_dir, prefix + "_2D_PCA_projection.png"))
 
 
     # Test for library saturation
@@ -141,7 +142,7 @@ def quaility_analysis(adata, sample, raw_file_name, raw_file_name_type, cluster_
     ax.set_ylabel("Genes Detected")
     ax.set_xscale('log')
     ax.set_yscale('log')
-    plt.savefig(out_dir + "/" + prefix+"_library_saturation.png")
+    plt.savefig(os.path.join(out_dir, prefix + "_library_saturation.png"))
 
 
     # Creates knee plot
@@ -152,7 +153,7 @@ def quaility_analysis(adata, sample, raw_file_name, raw_file_name_type, cluster_
     ax.set_xlabel("UMI Counts")
     ax.set_ylabel("Set of Barcodes")
     plt.grid(True, which="both")
-    plt.savefig(out_dir + "/" + prefix+"_knee_plot.png")
+    plt.savefig(os.path.join(out_dir, prefix + "_knee_plot.png"))
     
 
     # Checks if raw samples were provided so ambient RNA can be removed
@@ -184,11 +185,11 @@ def quaility_analysis(adata, sample, raw_file_name, raw_file_name_type, cluster_
 
     with plt.rc_context({'figure.figsize': (4, 4)}):
         scanpy.external.pl.scrublet_score_distribution(adata)
-        plt.savefig(out_dir + "/" + prefix+"_scrublet_score_distribution.png")
+        plt.savefig(os.path.join(out_dir, prefix + "_scrublet_score_distribution.png"))
 
     with plt.rc_context({'figure.figsize': (4, 4)}):
         scanpy.pl.umap(adata, color = ['leiden', 'predicted_doublet_category'])
-        plt.savefig(out_dir + "/" + prefix+"_leiden_doublet.png")
+        plt.savefig(os.path.join(out_dir, prefix + "_leiden_doublet.png"))
 
 
     # Remove doublets from non normalized anndata
@@ -214,20 +215,20 @@ def quaility_analysis(adata, sample, raw_file_name, raw_file_name_type, cluster_
     adata.obs.sort_values('n_genes_by_counts')
     with plt.rc_context():
         scanpy.pl.violin(adata, ['n_genes_by_counts', 'total_counts', 'pct_counts_mt', 'pct_counts_ribo'], jitter=0.4, multi_panel=True)
-        plt.savefig(out_dir + "/" + prefix+"_count_distributions.png")
+        plt.savefig(os.path.join(out_dir, prefix + "_count_distributions.png"))
 
 
     # Removes mitochondrial content over a certain number (ex: 20, keeps every cell < 20%)
     adata = adata[adata.obs.pct_counts_mt < mito_content_max]
     with plt.rc_context():
         scanpy.pl.scatter(adata, x='total_counts', y='pct_counts_mt')
-        plt.savefig(out_dir + "/" + prefix+"_percent_mito_by_total_counts.png")
+        plt.savefig(os.path.join(out_dir, prefix + "_percent_mito_by_total_counts.png"))
 
     # Save filtered data 
     print("\nSaving filtered data...")
-    print("Located at: ", out_dir+ "/" + prefix+"_qc_filtered.h5ad" )
+    print("Located at: ", os.path.join(out_dir, prefix + "_qc_filtered.h5ad") )
     adata_write = adata.copy()
-    adata_write.write_h5ad(out_dir+ "/" + prefix+"_qc_filtered.h5ad")
+    adata_write.write_h5ad(os.path.join(out_dir, prefix + "_qc_filtered.h5ad"))
 
     return adata
     

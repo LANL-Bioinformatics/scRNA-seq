@@ -48,7 +48,7 @@ def qc_plots_across_groups(adata, out_dir):
         fig = plt.figure(figsize = (25, 10))
         plt.xlabel('Number of Cells Per Sample')
         plt.bar(x_keys, x_values, color ='maroon')
-        plt.savefig(out_dir+"/"+outcome+"_cells_per_sample.png")
+        plt.savefig(os.path.join(out_dir, outcome + "_cells_per_sample.png"))
 
 
         # Fraction of Cells per Group
@@ -59,7 +59,7 @@ def qc_plots_across_groups(adata, out_dir):
         fig = plt.figure(figsize = (25, 10))
         plt.bar(x_keys, x_avg, color ='purple')
         plt.xlabel('Percent Cells Per Sample')
-        plt.savefig(out_dir+"/"+outcome+"_percent_cells_per_sample.png")
+        plt.savefig(os.path.join(out_dir,outcome + "_percent_cells_per_sample.png"))
 
         df = pd.DataFrame({'Sample List': x_keys, 'Cells per Sample': x_values, 'Fraction Cells per Sample': x_avg})
         df = df.set_index("Sample List")
@@ -68,15 +68,15 @@ def qc_plots_across_groups(adata, out_dir):
     # QC plots comparing all samples
     with plt.rc_context():
         scanpy.pl.violin(adata, 'total_counts', jitter=0.4, groupby='sample_id',  multi_panel=True, show=False) 
-        plt.savefig(out_dir+"/"+"counts_by_sample.png")
+        plt.savefig(os.path.join(out_dir,"counts_by_sample.png"))
 
     with plt.rc_context():
         scanpy.pl.violin(adata, 'n_genes_by_counts', jitter=0.4, groupby='sample_id',  multi_panel=True, show=False)
-        plt.savefig(out_dir+"/"+"number_genes_by_sample.png")
+        plt.savefig(os.path.join(out_dir, "number_genes_by_sample.png"))
 
     with plt.rc_context():
         scanpy.pl.violin(adata, 'pct_counts_mt', jitter=0.4, groupby='sample_id',  multi_panel=True, show=False)
-        plt.savefig(out_dir+"/"+"percent_mito_by_sample.png")
+        plt.savefig(os.path.join(out_dir, "percent_mito_by_sample.png"))
 
 
 # Get a list of files that match the pattern
