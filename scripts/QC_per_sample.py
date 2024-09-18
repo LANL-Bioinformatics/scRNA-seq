@@ -1,6 +1,9 @@
+#!/usr/bin/env python
+
 ### Individual sample QC
 ### Including removal of ambient RNA, doublets, cell/gene/mitochondrial content filtering 
 import sys
+import os
 import numpy as np
 import matplotlib.pyplot as plt
 import scanpy
@@ -38,6 +41,7 @@ parser.add_argument('--cluster_resolution', dest='cluster_resolution', type=floa
 parser.add_argument('--min_cells_per_gene', dest='min_cells_per_gene', type=int, default=3)
 parser.add_argument('--min_genes_per_cell', dest='min_genes_per_cell', type=int, default=200)
 parser.add_argument('--mitochondrial_content_max', dest='mitochondrial_content_max', type=int, default=20)
+parser.add_argument('--ribosomal_genelist', dest='ribosomal_genelist', required=True)
 parser.add_argument('--output_folder', action="store", dest='out_dir', required=True)
 
 # Parse the command line arguments and store in args
@@ -111,10 +115,11 @@ def file_to_adata(sample, condition, batch, file_name, file_type):
 
 # Basic QC (removal of ambient RNA, doublets, cell/gene/mitochondrial content filtering)
 # Saves results in .h5ad file
-def quaility_analysis(adata, sample, raw_file_name, raw_file_name_type, cluster_res, min_cells_per_gene, min_genes_per_cell, mito_content_max, out_dir):
+def quaility_analysis(adata, sample, raw_file_name, raw_file_name_type, cluster_res, min_cells_per_gene, min_genes_per_cell, mito_content_max, ribosomal_genelist, out_dir):
     prefix = sample
     print("\n Orginal Filtered Ouput from Cell Ranger")
     print(adata)
+    plt.switch_backend('agg')
 
     # Perform SVD 
     tsvd = TruncatedSVD(n_components=2)
@@ -124,7 +129,7 @@ def quaility_analysis(adata, sample, raw_file_name, raw_file_name_type, cluster_
     # Plot the cells in the 2D PCA projection
     fig, ax = plt.subplots(figsize=(10, 7))
     ax.scatter(X[:,0], X[:,1], alpha=0.5, c="green")
-    plt.savefig(out_dir+prefix+"_2D_PCA_projection.png")
+    plt.savefig(os.path.join(out_dir, prefix + "_2D_PCA_projection.png"))
 
 
     # Test for library saturation
@@ -137,7 +142,7 @@ def quaility_analysis(adata, sample, raw_file_name, raw_file_name_type, cluster_
     ax.set_ylabel("Genes Detected")
     ax.set_xscale('log')
     ax.set_yscale('log')
-    plt.savefig(out_dir+prefix+"_library_saturation.png")
+    plt.savefig(os.path.join(out_dir, prefix + "_library_saturation.png"))
 
 
     # Creates knee plot
@@ -148,7 +153,7 @@ def quaility_analysis(adata, sample, raw_file_name, raw_file_name_type, cluster_
     ax.set_xlabel("UMI Counts")
     ax.set_ylabel("Set of Barcodes")
     plt.grid(True, which="both")
-    plt.savefig(out_dir+prefix+"_knee_plot.png")
+    plt.savefig(os.path.join(out_dir, prefix + "_knee_plot.png"))
     
 
     # Checks if raw samples were provided so ambient RNA can be removed
@@ -180,11 +185,11 @@ def quaility_analysis(adata, sample, raw_file_name, raw_file_name_type, cluster_
 
     with plt.rc_context({'figure.figsize': (4, 4)}):
         scanpy.external.pl.scrublet_score_distribution(adata)
-        plt.savefig(out_dir+prefix+"_scrublet_score_distribution.png")
+        plt.savefig(os.path.join(out_dir, prefix + "_scrublet_score_distribution.png"))
 
     with plt.rc_context({'figure.figsize': (4, 4)}):
         scanpy.pl.umap(adata, color = ['leiden', 'predicted_doublet_category'])
-        plt.savefig(out_dir+prefix+"_leiden_doublet.png")
+        plt.savefig(os.path.join(out_dir, prefix + "_leiden_doublet.png"))
 
 
     # Remove doublets from non normalized anndata
@@ -196,8 +201,8 @@ def quaility_analysis(adata, sample, raw_file_name, raw_file_name_type, cluster_
     print("\nPerforming count based filtering ...")
     adata.var['mt'] = adata.var.index.str.startswith('MT-')
     #ribosomal gene list from: http://software.broadinstitute.org/gsea/msigdb/download_geneset.jsp?geneSetName=KEGG_RIBOSOME&fileType=txt
-    ribo_url = "reference_files/KEGG_RIBOSOME.v2024.1.Hs.txt"
-    ribo_genes = pd.read_table(ribo_url, skiprows=2, header = None)
+    #ribo_url = "reference_files/KEGG_RIBOSOME.v2024.1.Hs.txt"
+    ribo_genes = pd.read_table(ribosomal_genelist, skiprows=2, header = None)
     adata.var['ribo'] = adata.var_names.isin(ribo_genes[0].values)
     scanpy.pp.calculate_qc_metrics(adata, qc_vars=['mt', 'ribo'], percent_top=None, log1p=False, inplace=True)
 
@@ -210,20 +215,20 @@ def quaility_analysis(adata, sample, raw_file_name, raw_file_name_type, cluster_
     adata.obs.sort_values('n_genes_by_counts')
     with plt.rc_context():
         scanpy.pl.violin(adata, ['n_genes_by_counts', 'total_counts', 'pct_counts_mt', 'pct_counts_ribo'], jitter=0.4, multi_panel=True)
-        plt.savefig(out_dir+prefix+"_count_distributions.png")
+        plt.savefig(os.path.join(out_dir, prefix + "_count_distributions.png"))
 
 
     # Removes mitochondrial content over a certain number (ex: 20, keeps every cell < 20%)
     adata = adata[adata.obs.pct_counts_mt < mito_content_max]
     with plt.rc_context():
         scanpy.pl.scatter(adata, x='total_counts', y='pct_counts_mt')
-        plt.savefig(out_dir+prefix+"_percent_mito_by_total_counts.png")
+        plt.savefig(os.path.join(out_dir, prefix + "_percent_mito_by_total_counts.png"))
 
     # Save filtered data 
     print("\nSaving filtered data...")
-    print("Located at: ", out_dir+prefix+"_qc_filtered.h5ad" )
+    print("Located at: ", os.path.join(out_dir, prefix + "_qc_filtered.h5ad") )
     adata_write = adata.copy()
-    adata_write.write_h5ad(out_dir+prefix+"_qc_filtered.h5ad")
+    adata_write.write_h5ad(os.path.join(out_dir, prefix + "_qc_filtered.h5ad"))
 
     return adata
     
@@ -312,12 +317,12 @@ def cook_soup(adata, raw_file_name, raw_file_name_type):
     return adata
 
 # Processing sample driver function
-def process_sample(sample, condition, batch, file_name, file_name_type, raw_file_name, raw_file_name_type, cluster_res, min_cells_per_gene, min_genes_per_cell, mito_content_max, out_dir):
+def process_sample(sample, condition, batch, file_name, file_name_type, raw_file_name, raw_file_name_type, cluster_res, min_cells_per_gene, min_genes_per_cell, mito_content_max, ribosomal_genelist, out_dir):
     print("\n Processing sample ", sample)
 
     adata = file_to_adata(sample, condition, batch, file_name, file_name_type)
 
-    adata = quaility_analysis(adata, sample, raw_file_name, raw_file_name_type, cluster_res, min_cells_per_gene, min_genes_per_cell, mito_content_max, out_dir)
+    adata = quaility_analysis(adata, sample, raw_file_name, raw_file_name_type, cluster_res, min_cells_per_gene, min_genes_per_cell, mito_content_max, ribosomal_genelist, out_dir)
     
     print("Final anndata")
     print(adata)
@@ -356,4 +361,4 @@ except Exception as e:
 
 process_sample(args.sample_name, args.condition, args.batch, file_name, file_type, 
                raw_file_name, raw_file_type, args.cluster_resolution, args.min_cells_per_gene, 
-               args.min_genes_per_cell, args.mitochondrial_content_max, args.out_dir)
+               args.min_genes_per_cell, args.mitochondrial_content_max, args.ribosomal_genelist, args.out_dir)
