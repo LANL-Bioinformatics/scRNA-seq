@@ -41,6 +41,8 @@ parser.add_argument('--cluster_resolution', dest='cluster_resolution', type=floa
 parser.add_argument('--min_cells_per_gene', dest='min_cells_per_gene', type=int, default=3)
 parser.add_argument('--min_genes_per_cell', dest='min_genes_per_cell', type=int, default=200)
 parser.add_argument('--mitochondrial_content_max', dest='mitochondrial_content_max', type=int, default=20)
+parser.add_argument('--remove_mitochondrial_genes', dest='remove_mitochondrial_genes', type=bool, default=False)
+parser.add_argument('--remove_ribosomal_genes', dest='remove_ribosomal_genes', type=bool, default=False)
 parser.add_argument('--ribosomal_genelist', dest='ribosomal_genelist', required=True)
 parser.add_argument('--output_folder', action="store", dest='out_dir', required=True)
 
@@ -59,6 +61,8 @@ print("Leiden cluster resolution:", args.cluster_resolution)
 print("Minimum cells per gene:", args.min_cells_per_gene)
 print("Minimum genes per cell:", args.min_genes_per_cell)
 print("Mitochondrial content maximum:", args.mitochondrial_content_max)
+print("Remove mitochondrial genes:", args.remove_mitochondrial_genes)
+print("Remove ribosomal genes:", args.remove_ribosomal_genes)
 print("Output folder: ", args.out_dir)
 print("***********************")
 
@@ -92,6 +96,8 @@ def file_to_adata(sample, condition, batch, file_name, file_type):
             elif file.endswith("genes.tsv"):
                 genes = [line.strip() for line in open(file, "r")]
 
+        genes = [item.split('\t')[1] for item in genes if '\t' in item]
+
         adata.obs_names = barcodes
         adata.var_names = genes
 
@@ -115,7 +121,7 @@ def file_to_adata(sample, condition, batch, file_name, file_type):
 
 # Basic QC (removal of ambient RNA, doublets, cell/gene/mitochondrial content filtering)
 # Saves results in .h5ad file
-def quaility_analysis(adata, sample, raw_file_name, raw_file_name_type, cluster_res, min_cells_per_gene, min_genes_per_cell, mito_content_max, ribosomal_genelist, out_dir):
+def quaility_analysis(adata, sample, raw_file_name, raw_file_name_type, cluster_res, min_cells_per_gene, min_genes_per_cell, mito_content_max, remove_mito_genes, remove_ribo_genes,ribosomal_genelist,out_dir):
     prefix = sample
     print("\n Orginal Filtered Ouput from Cell Ranger")
     print(adata)
@@ -224,6 +230,15 @@ def quaility_analysis(adata, sample, raw_file_name, raw_file_name_type, cluster_
         scanpy.pl.scatter(adata, x='total_counts', y='pct_counts_mt')
         plt.savefig(os.path.join(out_dir, prefix + "_percent_mito_by_total_counts.png"))
 
+    if remove_mito_genes == True:
+        print("\nRemoving mitochondrial genes...")
+        non_mito_genes_list = [name for name in adata.var_names if not name.startswith('MT-')]
+        adata = adata[:, non_mito_genes_list] 
+    if remove_ribo_genes == True:
+        print("\nRemoving ribosomal genes...")
+        non_ribo_genes_list = [name for name in adata.var_names if name not in ribo_genes[0].values]
+        adata = adata[:, non_ribo_genes_list] 
+
     # Save filtered data 
     print("\nSaving filtered data...")
     print("Located at: ", os.path.join(out_dir, prefix + "_qc_filtered.h5ad") )
@@ -317,13 +332,14 @@ def cook_soup(adata, raw_file_name, raw_file_name_type):
     return adata
 
 # Processing sample driver function
-def process_sample(sample, condition, batch, file_name, file_name_type, raw_file_name, raw_file_name_type, cluster_res, min_cells_per_gene, min_genes_per_cell, mito_content_max, ribosomal_genelist, out_dir):
+
+def process_sample(sample, condition, batch, file_name, file_name_type, raw_file_name, raw_file_name_type, cluster_res, min_cells_per_gene, min_genes_per_cell, mito_content_max, remove_mito_genes, remove_ribo_genes,ribosomal_genelist, out_dir):
     print("\n Processing sample ", sample)
 
     adata = file_to_adata(sample, condition, batch, file_name, file_name_type)
 
-    adata = quaility_analysis(adata, sample, raw_file_name, raw_file_name_type, cluster_res, min_cells_per_gene, min_genes_per_cell, mito_content_max, ribosomal_genelist, out_dir)
-    
+    adata = quaility_analysis(adata, sample, raw_file_name, raw_file_name_type, cluster_res, min_cells_per_gene, min_genes_per_cell, mito_content_max, remove_mito_genes, remove_ribo_genes, ribosomal_genelist, out_dir)
+
     print("Final anndata")
     print(adata)
 
@@ -361,4 +377,5 @@ except Exception as e:
 
 process_sample(args.sample_name, args.condition, args.batch, file_name, file_type, 
                raw_file_name, raw_file_type, args.cluster_resolution, args.min_cells_per_gene, 
-               args.min_genes_per_cell, args.mitochondrial_content_max, args.ribosomal_genelist, args.out_dir)
+               args.min_genes_per_cell, args.mitochondrial_content_max, 
+               args.remove_mitochondrial_genes, args.remove_ribosomal_genes, args.ribosomal_genelist, args.out_dir)

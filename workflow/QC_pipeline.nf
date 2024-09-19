@@ -23,6 +23,7 @@ process integrated_dataset_qc {
     def pcaComps = params.pcaNcomps != null ? "--PCA_N_Comps $params.pcaNcomps" : ""
     def nNeighbors = params.neighborsNumber != null ? "--Neighbors_Number $params.neighborsNumber" : ""
     def nNeighborPCs = params.neighborsNpcs != null ? "--Neighbors_N_PCS $params.neighborsNpcs" : ""
+    def scaleMax = params.scaleMax != null ? "--Scale_Max $params.scaleMax" : ""
 
     //invoke script
     """
@@ -31,6 +32,7 @@ process integrated_dataset_qc {
     $pcaComps \
     $nNeighbors \
     $nNeighborPCs \
+    $scaleMax \
     --in_files $annData \
     --output_folder \$PWD
     """
@@ -82,6 +84,8 @@ process per_sample_qc {
     def minCells = params.minCellsPerGene != null ? "--min_cells_per_gene ${params.minCellsPerGene}" : ""
     def minGenes = params.minGenesPerCell != null ? "--min_genes_per_cell ${params.minGenesPerCell}" : ""
     def mitMax = params.mitochondrialContentMax != null ? "--mitochondrial_content_max ${params.mitochondrialContentMax}" : ""
+    def removeMit = (params.removeMitochondrialGenes != null && params.removeMitochondrialGenes == true) ? "--remove_mitochondrial_genes" : ""
+    def removeRib = (params.removeRibosomalGenes != null && params.removeRibosomalGenes == true) ? "--remove_ribosomal_genes" : ""
 
 
     //For optional inputs (since 1 or the other type of files can be provided):
@@ -121,6 +125,8 @@ process per_sample_qc {
     $minCells \
     $minGenes \
     $mitMax \
+    $removeMit \
+    $removeRib \
     --ribosomal_genelist $ribosomeList \
     --output_folder \$PWD
     """
