@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 # Normalizes data, runs Harmony batch correction and saves dataset in integrated.h5ad
 # Takes in input .h5ad file from QC_per_sample.py
 
@@ -20,6 +22,7 @@ parser.add_argument('--PCA_N_Comps', dest='PCA_N_Comps', type=int, default=30)
 parser.add_argument('--Neighbors_Number', dest='Neighbors_Number', type=int, default=30)
 parser.add_argument('--Neighbors_N_PCS', dest='Neighbors_N_PCS', type=int, default=20)
 parser.add_argument('--Scale_Max', dest='Scale_Max', type=int, default=20)
+parser.add_argument('--in_files', dest='in_files', nargs="*", required=True)
 parser.add_argument('--output_folder', action="store", dest='out_dir', required=True)
 
 # Parse the command line arguments and store in args
@@ -31,6 +34,7 @@ print("PCA number of components: ", args.PCA_N_Comps)
 print("Number of neighbors: ", args.Neighbors_Number)
 print("Neighbors number PCS: ", args.Neighbors_N_PCS)
 print("Scale data to max value:  ", args.Scale_Max)
+print("Input files: ", args.in_files)
 print("Output folder: ", args.out_dir)
 print("***********************")
 
@@ -58,14 +62,15 @@ def intergrated_dataset_qc(adata, HVG_num_top_genes, PCA_N_Comps, Neighbors_Numb
     scanpy.tl.umap(adata, min_dist=0.3)
 
     # Plots UMAP without batch correction
+    plt.switch_backend('agg')
     with plt.rc_context():
         fig, ax = plt.subplots(figsize=(10, 7))
         scanpy.pl.umap(adata, color='sample_id', ax=ax)
-        plt.savefig(out_dir+"sample_id_clustering.png", bbox_inches='tight')
+        plt.savefig(os.path.join(out_dir, "sample_id_clustering.png"), bbox_inches='tight')
     with plt.rc_context():
         fig, ax = plt.subplots(figsize=(10, 7))
         scanpy.pl.umap(adata, color='batch', ax=ax)
-        plt.savefig(out_dir+"batch_clustering.png", bbox_inches='tight')
+        plt.savefig(os.path.join(out_dir, "batch_clustering.png"), bbox_inches='tight')
 
     # Runs Harmony batch correction
     scanpy.external.pp.harmony_integrate(adata, 'sample_id', adjusted_basis='X_pca', max_iter_harmony=50)
@@ -76,24 +81,24 @@ def intergrated_dataset_qc(adata, HVG_num_top_genes, PCA_N_Comps, Neighbors_Numb
     with plt.rc_context():
         fig, ax = plt.subplots(figsize=(10, 7))
         scanpy.pl.umap(adata, color='sample_id', ax=ax)
-        plt.savefig(out_dir+"sample_id_clustering_batch_effect_corrected.png",bbox_inches='tight')
+        plt.savefig(os.path.join(out_dir, "sample_id_clustering_batch_effect_corrected.png"),bbox_inches='tight')
     with plt.rc_context():
         fig, ax = plt.subplots(figsize=(10, 7))
         scanpy.pl.umap(adata, color='batch', ax=ax)
-        plt.savefig(out_dir+"batch_clustering_batch_effect_corrected.png",bbox_inches='tight')
+        plt.savefig(os.path.join(out_dir, "batch_clustering_batch_effect_corrected.png"),bbox_inches='tight')
 
     # Plots varaince ratio of PCA components
     with plt.rc_context():
         fig, ax = plt.subplots(figsize=(10, 7))
         scanpy.pl.pca_variance_ratio(adata, log=True)
-        plt.savefig(out_dir+"variance_ratio_PCA.png",bbox_inches='tight')
+        plt.savefig(os.path.join(out_dir, "variance_ratio_PCA.png"),bbox_inches='tight')
 
     print("\nWriting dataset to integrated.h5ad ...")
-    adata.write_h5ad(out_dir+'integrated.h5ad')
+    adata.write_h5ad(os.path.join(out_dir, 'integrated.h5ad'))
 
 
 # Get a list of files that match the pattern
-matched_files = glob.glob(os.path.join(args.out_dir, "*_qc_filtered.h5ad"))
+matched_files = args.in_files
 
 #Loads sample into anndata
 adata_list = []
