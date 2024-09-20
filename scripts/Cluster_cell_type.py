@@ -1,5 +1,8 @@
+#!/usr/bin/env python
 # Uses a list of user provided marker genes (or default) to assign cell types to the leiden clusters
 
+import os
+from pathlib import Path
 import matplotlib.pyplot as plt
 from matplotlib.colors import LinearSegmentedColormap
 import anndata
@@ -17,6 +20,7 @@ parser = argparse.ArgumentParser(description='Cluster Cell Type')
 parser.add_argument('--cluster_resolution', dest='cluster_resolution', type=float, default=0.4)
 parser.add_argument('--percentile', dest='percentile', type=int, default=80)
 parser.add_argument('--cell_types', dest='cell_types', nargs='*', default= ["T cells: D3G,TRBC2,CD3D,CD3E,IL7R,LTB", "NK cells:TYROBP,FCGR3A,NKG7,TRDC,KLRF1,KLRD1,GNLY", "B cells: MS4A1,PXK,CD19,CD74,CD79A,IGHM", "Plasma cells: JCHAIN,MZB1,IGHG1,SPAG4", "Proliferating lymphocytes: MKI67,CD3G,FCGR3A", "Monocytes: CD14, FCGR3A,LYZ,CFP,APOBEC3A,CCR2", "cDCs: CD1C,BDCA4,FCER1A", "pDCs: SERPINF1,BST2,MAP3K2,KLK1,TRADD,CLEC4C", "platelets: PF4,GP1BA,SELP,PPBP,ITGA2B", "Erythrocytes: HBA2,HBA1,HBB"])
+parser.add_argument('--integrated_data', dest= 'integrated_data', required = True)
 parser.add_argument('--output_folder', action="store", dest='out_dir', required=True)
 
 # Parse the command line arguments and store in args
@@ -25,14 +29,15 @@ args = parser.parse_args()
 print("*** Code parameters ***")
 print("Leiden cluster resolution:", args.cluster_resolution)
 print("Gene expression values above this percentile are taken for cell typing: ", args.percentile)
-print("Cell Types:", args.cell_types)
+print("Cell Types: ", args.cell_types)
+print("Input File: ", args.integrated_data)
 print("Output folder: ", args.out_dir)
 print("***********************")
 
 
 # Load data from intergrated sample QC output
 out_dir = args.out_dir
-adata = anndata.read(out_dir+"integrated.h5ad")
+adata = anndata.read(args.integrated_data)
 
 # Leiden Clustering 
 scanpy.tl.leiden(adata, resolution = args.cluster_resolution)
@@ -40,7 +45,7 @@ scanpy.tl.leiden(adata, resolution = args.cluster_resolution)
 with plt.rc_context():
     fig, ax = plt.subplots(figsize=(10, 7))
     scanpy.pl.umap(adata, color='leiden', ax=ax)
-    plt.savefig(out_dir+"UMAP_leiden_All.png")
+    plt.savefig(os.path.join(out_dir, "UMAP_leiden_All.png"))
 
 
 # Count cells in each Leiden cluster
@@ -84,7 +89,7 @@ for item in args.cell_types:
     cell_group_summary[cell_type_group] = cell_group_summary.mean(axis=1)
     print(cell_group_summary)
     print("***********************")
-    cell_group_summary.to_csv(out_dir+cell_type_group+"_marker_gene_average.csv")
+    cell_group_summary.to_csv(os.path.join(out_dir,cell_type_group+"_marker_gene_average.csv"))
     df_cell_type_summary = pd.concat([df_cell_type_summary , cell_group_summary[cell_type_group]], axis=1)
 
 
@@ -94,7 +99,7 @@ df_cell_type_summary["Top Cell Type"] = df_cell_type_summary.idxmax(axis=1)
 df_cell_type_summary.index = pd.to_numeric(df_cell_type_summary.index)
 df_cell_type_summary = df_cell_type_summary.sort_index()
 print(df_cell_type_summary)
-df_cell_type_summary.to_csv(out_dir+"all_types_marker_gene_average.csv")
+df_cell_type_summary.to_csv(os.path.join(out_dir,"all_types_marker_gene_average.csv"))
 
 calculated_cell_types_gene = df_cell_type_summary["Top Cell Type"].to_numpy()
 
@@ -121,17 +126,18 @@ print(calculated_cell_types_gene)
 adata.rename_categories('leiden', calculated_cell_types_gene)
 
 #Saves new h5ad file with updated names 
-adata.write_h5ad(out_dir+"adata_w_leiden_groups.h5ad")
+
+adata.write_h5ad(Path(os.path.join(out_dir, "adata_w_leiden_groups.h5ad")))
 
 #Replots the leiden clustering with new groups
 with plt.rc_context():
     fig, ax = plt.subplots(figsize=(10, 7))
     scanpy.pl.umap(adata, color='leiden', ax=ax)
-    plt.savefig(out_dir+"UMAP_leiden_automated_names.png", bbox_inches='tight')
+    plt.savefig(os.path.join(out_dir,"UMAP_leiden_automated_names.png"), bbox_inches='tight')
 with plt.rc_context():
     fig, ax = plt.subplots(figsize=(10, 7))
     scanpy.pl.umap(adata, color='leiden', legend_loc='on data')
-    plt.savefig(out_dir+"UMAP_leiden_automated_names_labeled_on_plot_.png", bbox_inches='tight')
+    plt.savefig(os.path.join(out_dir,"UMAP_leiden_automated_names_labeled_on_plot_.png"), bbox_inches='tight')
 
 
 # Custom colormap
@@ -152,7 +158,7 @@ for item in args.cell_types:
     with plt.rc_context():
         fig, ax = plt.subplots(figsize=(10, 7))
         scanpy.pl.umap(adata, color=gene_list, color_map=cmap)
-        plt.savefig(out_dir+"UMAP_leiden_"+cell_type_group+"_marker_gene.png", bbox_inches='tight')
+        plt.savefig(os.path.join(out_dir,"UMAP_leiden_"+cell_type_group+"_marker_gene.png"), bbox_inches='tight')
 
 
 
@@ -165,10 +171,10 @@ for condition in condition_list:
     with plt.rc_context():
         fig, ax = plt.subplots(figsize=(10, 7))
         scanpy.pl.umap(subset_adata, color='leiden', ax=ax)
-        plt.savefig(out_dir+"UMAP_leiden_"+condition+"_automated_names.png", bbox_inches='tight')
+        plt.savefig(os.path.join(out_dir,"UMAP_leiden_"+condition+"_automated_names.png"), bbox_inches='tight')
     with plt.rc_context():
         fig, ax = plt.subplots(figsize=(10, 7))
         scanpy.pl.umap(subset_adata, color='leiden', legend_loc='on data')
-        plt.savefig(out_dir+"UMAP_leiden_"+condition+"_automated_names_labeled_on_plot_.png", bbox_inches='tight')
+        plt.savefig(os.path.join(out_dir,"UMAP_leiden_"+condition+"_automated_names_labeled_on_plot_.png"), bbox_inches='tight')
 
 
