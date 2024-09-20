@@ -40,6 +40,7 @@ out_dir = args.out_dir
 adata = anndata.read(args.integrated_data)
 
 # Leiden Clustering 
+plt.switch_backend('agg')
 scanpy.tl.leiden(adata, resolution = args.cluster_resolution)
 
 with plt.rc_context():
@@ -62,6 +63,7 @@ for item in args.cell_types:
 
     # Iterates through all marker genes assigned to a cell type
     for gene in item.split(":")[1].split(","):
+        gene = gene.strip()
         if gene in adata.var_names:
 
             # Create Data Frame with leiden, cell id and gene column from adata
@@ -151,6 +153,7 @@ for item in args.cell_types:
     gene_list = []
     cell_type_group = item.split(":")[0]
     for gene in item.split(":")[1].split(","):
+        gene = gene.strip()
         # Checks if gene is present in the dataset
         if gene in adata.var_names:
             gene_list.append(gene)
