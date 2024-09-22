@@ -28,7 +28,7 @@ process cellTyping {
     }
 
     """
-    ${workflow.projectDir}/../scripts/Cluster_cell_type.py \
+    Cluster_cell_type.py \
     $clusterRes \
     $percentile \
     $cellTypes \
@@ -63,7 +63,7 @@ process integratedDatasetQC {
 
     //invoke script
     """
-    ${workflow.projectDir}/../scripts/QC_intergrated_dataset.py \
+    QC_intergrated_dataset.py \
     $hvgTop \
     $pcaComps \
     $nNeighbors \
@@ -90,7 +90,7 @@ process plotsAcrossGroupsQC {
     script:
     //invoke script
     """
-    ${workflow.projectDir}/../scripts/QC_plots_across_groups.py \
+    QC_plots_across_groups.py \
     --in_files $annData \
     --output_folder \$PWD \
     """
@@ -152,7 +152,7 @@ process perSampleQC {
     
     //invoke script with arguments
     """
-    ${workflow.projectDir}/../scripts/QC_per_sample.py \
+    QC_per_sample.py \
     $sampleName \
     $condition \
     $batch \
