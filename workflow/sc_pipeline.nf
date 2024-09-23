@@ -2,9 +2,45 @@
 
 import groovy.json.JsonSlurper
 
+process cellTyping {
+    publishDir(
+        path: "${params.outputFolder}",
+        mode: 'copy'
+    )
+    input:
+    path integratedData
+
+    output:
+    path "*.png"
+    path "*.csv"
+    path "*.h5ad"
+
+    script:
+
+    
+    def clusterRes = params.clusterResolution != null ? "--cluster_resolution $params.clusterResolution" : ""
+    def percentile = params.percentile != null ? "--percentile $params.percentile" : ""
+    def cellTypes = ""
+    if (params.cellType != null) {
+        def types = ""
+        params.cellType.each{k, v -> types += "\"$k: $v\" "}
+        cellTypes = "--cell_types " + types
+    }
+
+    """
+    Cluster_cell_type.py \
+    $clusterRes \
+    $percentile \
+    $cellTypes \
+    --integrated_data $integratedData \
+    --output_folder \$PWD
+    """
+
+}
+
 //takes qc-filtered h5ad files. 
 //Produces a series of graphs and integrated.h5ad file with all samples combined, normalized, and batch corrected
-process integrated_dataset_qc {
+process integratedDatasetQC {
     publishDir(
         path: "${params.outputFolder}",
         mode: 'copy'
@@ -15,7 +51,7 @@ process integrated_dataset_qc {
 
     output:
     path "*.png"
-    path "integrated.h5ad"
+    path "integrated.h5ad", emit: integrated
 
     script:
     //setup optional arguments
@@ -27,7 +63,7 @@ process integrated_dataset_qc {
 
     //invoke script
     """
-    ${workflow.projectDir}/../scripts/QC_intergrated_dataset.py \
+    QC_intergrated_dataset.py \
     $hvgTop \
     $pcaComps \
     $nNeighbors \
@@ -40,7 +76,7 @@ process integrated_dataset_qc {
 
 //takes qc-filtered h5ad files.
 //Produces a series of plots comparing the samples inside each treatment/outcome group.
-process plots_across_groups_qc {
+process plotsAcrossGroupsQC {
     publishDir(
         path: "${params.outputFolder}",
         mode: 'copy'
@@ -54,7 +90,7 @@ process plots_across_groups_qc {
     script:
     //invoke script
     """
-    ${workflow.projectDir}/../scripts/QC_plots_across_groups.py \
+    QC_plots_across_groups.py \
     --in_files $annData \
     --output_folder \$PWD \
     """
@@ -62,7 +98,8 @@ process plots_across_groups_qc {
 
 //takes in one sample (h5 or mtx/tsv files) and associated metadata.
 //Runs sample-specific QC and outputs h5ad files that preserve annotation
-process per_sample_qc {
+process perSampleQC {
+    tag "${md["sampleName"]}"
     publishDir(
         path: "${params.outputFolder}",
         mode: 'copy'
@@ -84,8 +121,8 @@ process per_sample_qc {
     def minCells = params.minCellsPerGene != null ? "--min_cells_per_gene ${params.minCellsPerGene}" : ""
     def minGenes = params.minGenesPerCell != null ? "--min_genes_per_cell ${params.minGenesPerCell}" : ""
     def mitMax = params.mitochondrialContentMax != null ? "--mitochondrial_content_max ${params.mitochondrialContentMax}" : ""
-    def removeMit = (params.removeMitochondrialGenes != null && params.removeMitochondrialGenes == true) ? "--remove_mitochondrial_genes" : ""
-    def removeRib = (params.removeRibosomalGenes != null && params.removeRibosomalGenes == true) ? "--remove_ribosomal_genes" : ""
+    def removeMit = (params.removeMitochondrialGenes != null && params.removeMitochondrialGenes == true) ? "--remove_mitochondrial_genes true" : ""
+    def removeRib = (params.removeRibosomalGenes != null && params.removeRibosomalGenes == true) ? "--remove_ribosomal_genes true" : ""
 
 
     //For optional inputs (since 1 or the other type of files can be provided):
@@ -115,7 +152,7 @@ process per_sample_qc {
     
     //invoke script with arguments
     """
-    ${workflow.projectDir}/../scripts/QC_per_sample.py \
+    QC_per_sample.py \
     $sampleName \
     $condition \
     $batch \
@@ -133,6 +170,7 @@ process per_sample_qc {
 }
 
 workflow {
+    //setup for optional input
     "mkdir ${workflow.projectDir}/nf_assets".execute().text
     "touch ${workflow.projectDir}/nf_assets/NO_FILE".execute().text
     "touch ${workflow.projectDir}/nf_assets/NO_FILE2".execute().text
@@ -192,12 +230,15 @@ workflow {
     input_ch = channel.fromList(tupleList).combine(channel.fromPath(params.ribosomalGeneList, checkIfExists:true))
 
     //invoke per-sample qc script
-    per_sample_qc(input_ch)
-    qc_filt_ch = per_sample_qc.out.annData.collect()
+    perSampleQC(input_ch)
+    qc_filt_ch = perSampleQC.out.annData.collect()
 
     //run both other qc scripts (plots and integrated QC) in parallel off of the output from the per-sample QC
-    plots_across_groups_qc(qc_filt_ch)
-    integrated_dataset_qc(qc_filt_ch)
+    plotsAcrossGroupsQC(qc_filt_ch)
+    integratedDatasetQC(qc_filt_ch)
+
+    //cell typing
+    cellTyping(integratedDatasetQC.out.integrated)
 
 
 }
