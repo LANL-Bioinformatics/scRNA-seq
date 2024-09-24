@@ -25,7 +25,7 @@ parser = argparse.ArgumentParser(description='pyDeSeq2')
 parser.add_argument('--p_adj', dest='p_adj', type=float, default=0.05)
 parser.add_argument('--log2fc', dest='log2fc', type=float, default=0.5)
 parser.add_argument('--heatmap_num_sig_genes', dest='heatmap_num_sig_genes', type=int, default=50)
-parser.add_argument('--min_cells', dest='min_cells', type=int, default=100)
+parser.add_argument('--min_cells_per_group', dest='min_cells', type=int, default=100)
 parser.add_argument('--output_folder', action="store", dest='out_dir', required=True)
 
 # Parse the command line arguments and store in args
