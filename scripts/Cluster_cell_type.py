@@ -41,6 +41,7 @@ adata = anndata.read(args.integrated_data)
 
 # Leiden Clustering 
 plt.switch_backend('agg')
+
 scanpy.tl.leiden(adata, resolution = args.cluster_resolution)
 
 with plt.rc_context():
@@ -91,6 +92,7 @@ for item in args.cell_types:
     cell_group_summary[cell_type_group] = cell_group_summary.mean(axis=1)
     print(cell_group_summary)
     print("***********************")
+
     cell_group_summary.to_csv(os.path.join(out_dir,cell_type_group+"_marker_gene_average.csv"))
     df_cell_type_summary = pd.concat([df_cell_type_summary , cell_group_summary[cell_type_group]], axis=1)
 
