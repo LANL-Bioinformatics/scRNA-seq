@@ -11,12 +11,19 @@ RUN conda init bash \
     && . ~/.bashrc 
 
 
-RUN conda env create -f environment.yml
-RUN conda install -c conda-forge conda-pack
+RUN conda env create -f environment.yml && conda clean --all -y
+
+#2 packages have no conda versions, installing into environment with pip
+RUN conda install pip && conda clean --all -y
+RUN /opt/conda/envs/10x_covid_py/bin/pip install pydeseq2==0.4.11
+RUN /opt/conda/envs/10x_covid_py/bin/pip install pertpy==0.9.4
+#fix pip clobbering files
+RUN conda install -n 10x_covid_py -c conda-forge numpy=1.23.5 --force-reinstall && conda clean --all -y
+#create packed environment with scripts
+RUN conda install -c conda-forge conda-pack && conda clean --all -y
 
 
-ADD scripts/Cluster_cell_type.py /opt/conda/envs/10x_covid_py/bin
-ADD scripts/QC*.py /opt/conda/envs/10x_covid_py/bin
+ADD scripts/* /opt/conda/envs/10x_covid_py/bin
 
 RUN conda-pack -n 10x_covid_py -o /tmp/env.tar && \
     mkdir /venv && cd /venv && tar xf /tmp/env.tar && \
@@ -24,6 +31,7 @@ RUN conda-pack -n 10x_covid_py -o /tmp/env.tar && \
 
 RUN /venv/bin/conda-unpack
 
+#runtime stage to compress layers+improve image size
 FROM debian:buster AS runtime
 
 COPY --from=build /venv /venv
