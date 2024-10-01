@@ -13,7 +13,7 @@ process cellTyping {
     output:
     path "*.png"
     path "*.csv"
-    path "*.h5ad"
+    path "*.h5ad", emit:leidenAnndata
 
     script:
 
@@ -28,7 +28,7 @@ process cellTyping {
     }
 
     """
-    Cluster_cell_type.py \
+    ${workflow.projectDir}/../scripts/Cluster_cell_type.py \
     $clusterRes \
     $percentile \
     $cellTypes \
@@ -41,6 +41,9 @@ process cellTyping {
 //takes qc-filtered h5ad files. 
 //Produces a series of graphs and integrated.h5ad file with all samples combined, normalized, and batch corrected
 process integratedDatasetQC {
+    memory { 1.GB * task.attempt }
+    errorStrategy { task.exitStatus in 137..140 ? 'retry' : 'terminate' }
+    maxRetries 7
     publishDir(
         path: "${params.outputFolder}",
         mode: 'copy'
@@ -63,7 +66,7 @@ process integratedDatasetQC {
 
     //invoke script
     """
-    QC_intergrated_dataset.py \
+    ${workflow.projectDir}/../scripts/QC_intergrated_dataset.py \
     $hvgTop \
     $pcaComps \
     $nNeighbors \
@@ -90,7 +93,7 @@ process plotsAcrossGroupsQC {
     script:
     //invoke script
     """
-    QC_plots_across_groups.py \
+    ${workflow.projectDir}/../scripts/QC_plots_across_groups.py \
     --in_files $annData \
     --output_folder \$PWD \
     """
@@ -99,6 +102,9 @@ process plotsAcrossGroupsQC {
 //takes in one sample (h5 or mtx/tsv files) and associated metadata.
 //Runs sample-specific QC and outputs h5ad files that preserve annotation
 process perSampleQC {
+    memory { 2.GB * task.attempt }
+    errorStrategy { task.exitStatus in 137..140 ? 'retry' : 'terminate' }
+    maxRetries 3
     tag "${md["sampleName"]}"
     publishDir(
         path: "${params.outputFolder}",
@@ -152,7 +158,7 @@ process perSampleQC {
     
     //invoke script with arguments
     """
-    QC_per_sample.py \
+    ${workflow.projectDir}/../scripts/QC_per_sample.py \
     $sampleName \
     $condition \
     $batch \
@@ -166,6 +172,56 @@ process perSampleQC {
     $removeRib \
     --ribosomal_genelist $ribosomeList \
     --output_folder \$PWD
+    """
+}
+
+process cellComposition {
+    publishDir(
+        path: "${params.outputFolder}",
+        mode: 'copy'
+    )
+    input:
+    path leidenData
+
+    output:
+    path "*"
+
+    script:
+    def padj = params.pAdj != null ? "--p_adj $params.pAdj" : ""
+    """
+    ${workflow.projectDir}/../scripts/Cell_composition_analysis.py \
+    $padj \
+    --in_file $leidenData \
+    --output_folder .
+    """
+}
+
+process diffGeneExpr {
+    publishDir(
+        path: "${params.outputFolder}",
+        mode: 'copy'
+    )
+    
+    input:
+    path leidenData
+
+    output:
+    path "*"
+
+    script:
+    def padj = params.pAdj != null ? "--p_adj $params.pAdj" : ""
+    def log2fc = params.log2Fc != null ? "--log2fc $params.log2Fc" : ""
+    def nSig = params.heatmapNumSigGenes != null ? "--heatmap_num_sig_genes $params.heatmapNumSigGenes" : ""
+    def minCells = params.minCellsPerGroup != null ? "--min_cells_per_group $params.minCellsPerGroup" : ""
+
+    """
+    ${workflow.projectDir}/../scripts/Differential_gene_expression.py \
+    $padj \
+    $log2fc \
+    $nSig \
+    $minCells \
+    --in_file $leidenData \
+    --output_folder .
     """
 }
 
@@ -239,6 +295,9 @@ workflow {
 
     //cell typing
     cellTyping(integratedDatasetQC.out.integrated)
+
+    cellComposition(cellTyping.out.leidenAnndata)
+    diffGeneExpr(cellTyping.out.leidenAnndata)
 
 
 }

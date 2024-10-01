@@ -1,0 +1,36 @@
+{
+    "Samples": [
+       {
+          "Sample_Name": "GSM4674661_CM1_CM2",
+          "Condition": "Moderate Covid",
+          "Batch": "Yao et al.",
+          "File_Name": {
+            "h5": "data/GSM4674661_CM1_CM2_filtered_feature_bc_matrix.h5"
+          },
+          "Raw_File_Name": {
+            "h5": "data/CM1_CM2_raw_feature_bc_matrix.h5"
+          }
+       },
+       {
+        "Sample_Name": "GSM4674662_CM3_CM4",
+        "Condition": "Moderate Covid",
+        "Batch": "Yao et al.",
+        "File_Name": {
+          "h5-filtered": "data/GSM4674662_CM3_CM4_filtered_feature_bc_matrix.h5"
+        },
+        "Raw_File_Name": {
+          "h5-unfiltered": "data/GSM4674662_CM3_CM4_raw_feature_bc_matrix.h5"
+        }
+      },
+       {
+         "Sample_Name": "X-3W",
+         "Condition": "Control",
+         "Batch": "Chen et al",
+         "File_Name": {
+           "matrix": "data/GSM3087624_DTM-X_PBMC_methanol-3W+SSC_matrix.mtx.gz",
+           "genes": "data/GSM3087624_DTM-X_PBMC_methanol-3W+SSC_genes.tsv.gz",
+           "barcodes": "data/GSM3087624_DTM-X_PBMC_methanol-3W+SSC_barcodes.tsv.gz"
+         }
+       }
+    ]
+ }
