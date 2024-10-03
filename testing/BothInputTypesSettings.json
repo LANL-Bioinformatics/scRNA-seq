@@ -1,5 +1,5 @@
 {
-    "sampleInfo": "/panfs/biopan04/scratch-apwat/scRNA-seq/testing/BothInputTypes.json",
+    "sampleInfo": "$projectdir/../testing/BothInputTypes.json",
     "clusterResolution": 0.4,
     "minCellsPerGene": 3, 
     "minGenesPerCell": 200,

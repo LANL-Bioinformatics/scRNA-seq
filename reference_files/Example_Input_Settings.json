@@ -1,5 +1,5 @@
 {
-    "sampleInfo":"../reference_files/Example_Input.json",
+    "sampleInfo":"$projectdir/../reference_files/reference_files/Example_Input.json",
     "clusterResolution": 0.4,
     "minCellsPerGene": 3, 
     "minGenesPerCell": 200,
