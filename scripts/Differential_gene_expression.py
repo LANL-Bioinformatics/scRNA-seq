@@ -209,7 +209,6 @@ cell_groups.sort()
 
 
 count = 1 
-print("start of loop")
 for condition in conditions:
     for condition2 in conditions[count:]: # Increases start of list to prevent duplicates
         if condition != condition2:

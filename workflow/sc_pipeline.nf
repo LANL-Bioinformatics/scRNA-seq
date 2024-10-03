@@ -2,103 +2,9 @@
 
 import groovy.json.JsonSlurper
 
-process cellTyping {
-    publishDir(
-        path: "${params.outputFolder}/cellTyping",
-        mode: 'copy'
-    )
-    input:
-    path integratedData
 
-    output:
-    path "*.png"
-    path "*.csv"
-    path "*.h5ad", emit:leidenAnndata
-
-    script:
-
-    
-    def clusterRes = params.clusterResolution != null ? "--cluster_resolution $params.clusterResolution" : ""
-    def percentile = params.percentile != null ? "--percentile $params.percentile" : ""
-    def cellTypes = ""
-    if (params.cellType != null) {
-        def types = ""
-        params.cellType.each{k, v -> types += "\"$k: $v\" "}
-        cellTypes = "--cell_types " + types
-    }
-
-    """
-    Cluster_cell_type.py \
-    $clusterRes \
-    $percentile \
-    $cellTypes \
-    --integrated_data $integratedData \
-    --output_folder \$PWD
-    """
-
-}
-
-//takes qc-filtered h5ad files. 
-//Produces a series of graphs and integrated.h5ad file with all samples combined, normalized, and batch corrected
-process integratedDatasetQC {
-    
-    publishDir(
-        path: "${params.outputFolder}/QC",
-        mode: 'copy'
-    )
-
-    input:
-    path annData
-
-    output:
-    path "*.png"
-    path "integrated.h5ad", emit: integrated
-
-    script:
-    //setup optional arguments
-    def hvgTop = params.hvgNumTopGenes != null ? "--HVG_num_top_genes $params.hvgNumTopGenes" : ""
-    def pcaComps = params.pcaNcomps != null ? "--PCA_N_Comps $params.pcaNcomps" : ""
-    def nNeighbors = params.neighborsNumber != null ? "--Neighbors_Number $params.neighborsNumber" : ""
-    def nNeighborPCs = params.neighborsNpcs != null ? "--Neighbors_N_PCS $params.neighborsNpcs" : ""
-    def scaleMax = params.scaleMax != null ? "--Scale_Max $params.scaleMax" : ""
-
-    //invoke script
-    """
-    QC_intergrated_dataset.py \
-    $hvgTop \
-    $pcaComps \
-    $nNeighbors \
-    $nNeighborPCs \
-    $scaleMax \
-    --in_files $annData \
-    --output_folder \$PWD
-    """
-}
-
-//takes qc-filtered h5ad files.
-//Produces a series of plots comparing the samples inside each treatment/outcome group.
-process plotsAcrossGroupsQC {
-    publishDir(
-        path: "${params.outputFolder}/QC",
-        mode: 'copy'
-    )
-    input:
-    path annData
-
-    output:
-    path "*.png"
-
-    script:
-    //invoke script
-    """
-    QC_plots_across_groups.py \
-    --in_files $annData \
-    --output_folder \$PWD \
-    """
-}
-
-//takes in one sample (h5 or mtx/tsv files) and associated metadata.
-//Runs sample-specific QC and outputs h5ad files that preserve annotation
+//QC process. takes in one sample (h5 or mtx/tsv files) and associated metadata.
+//Runs sample-specific QC and outputs h5ad files that preserve annotation.
 process perSampleQC {
 
     //ensure that each sample has enough memory to go through QC
@@ -176,9 +82,107 @@ process perSampleQC {
     """
 }
 
+//QC process. Takes qc-filtered h5ad files.
+//Produces a series of plots comparing the samples inside each treatment/outcome group.
+process plotsAcrossGroupsQC {
+    publishDir(
+        path: "${params.outputFolder}/QC",
+        mode: 'copy'
+    )
+    input:
+    path annData
+
+    output:
+    path "*.png"
+
+    script:
+    //invoke script
+    """
+    QC_plots_across_groups.py \
+    --in_files $annData \
+    --output_folder \$PWD \
+    """
+}
+
+//QC process. Takes qc-filtered h5ad files. 
+//Produces a series of graphs and integrated.h5ad file with all samples combined, normalized, and batch corrected
+process integratedDatasetQC {
+    
+    publishDir(
+        path: "${params.outputFolder}/QC",
+        mode: 'copy'
+    )
+
+    input:
+    path annData
+
+    output:
+    path "*.png"
+    path "integrated.h5ad", emit: integrated
+
+    script:
+    //setup optional arguments
+    def hvgTop = params.hvgNumTopGenes != null ? "--HVG_num_top_genes $params.hvgNumTopGenes" : ""
+    def pcaComps = params.pcaNcomps != null ? "--PCA_N_Comps $params.pcaNcomps" : ""
+    def nNeighbors = params.neighborsNumber != null ? "--Neighbors_Number $params.neighborsNumber" : ""
+    def nNeighborPCs = params.neighborsNpcs != null ? "--Neighbors_N_PCS $params.neighborsNpcs" : ""
+    def scaleMax = params.scaleMax != null ? "--Scale_Max $params.scaleMax" : ""
+
+    //invoke script
+    """
+    QC_intergrated_dataset.py \
+    $hvgTop \
+    $pcaComps \
+    $nNeighbors \
+    $nNeighborPCs \
+    $scaleMax \
+    --in_files $annData \
+    --output_folder \$PWD
+    """
+}
+
+//Clusters cells in Leiden groups and assigns cell types. Takes integrated h5ad file that has been through all QC.
+process cellTyping {
+    publishDir(
+        path: "${params.outputFolder}/CellTyping",
+        mode: 'copy'
+    )
+    input:
+    path integratedData
+
+    output:
+    path "*.png"
+    path "*.csv"
+    path "*.h5ad", emit:leidenAnndata
+
+    script:
+
+    
+    def clusterRes = params.clusterResolution != null ? "--cluster_resolution $params.clusterResolution" : ""
+    def percentile = params.percentile != null ? "--percentile $params.percentile" : ""
+    def cellTypes = ""
+    if (params.cellType != null) {
+        def types = ""
+        params.cellType.each{k, v -> types += "\"$k: $v\" "}
+        cellTypes = "--cell_types " + types
+    }
+
+    """
+    Cluster_cell_type.py \
+    $clusterRes \
+    $percentile \
+    $cellTypes \
+    --integrated_data $integratedData \
+    --output_folder \$PWD
+    """
+
+}
+
+
+//Takes h5ad file with leiden groups from cell typing process. 
 process cellComposition {
     publishDir(
-        path: "${params.outputFolder}/cellComposition",
+        path: "${params.outputFolder}/CellComposition",
         mode: 'copy'
     )
     input:
@@ -197,39 +201,10 @@ process cellComposition {
     """
 }
 
-process gsea {
-    publishDir(
-        path: "${params.outputFolder}/geneSetEnrichmentAnalysis",
-	mode: 'copy'
-	)
-
-    input:
-    path diffExpr
-    
-    output:
-    path "*.png"
-    path "*.csv"
-    
-    script:
-
-    def nPlot = params.nTopTermEnrichPlot != null ? "--n_top_term_enrich_plot $params.nTopTermEnrichPlot" : ""
-    def dotplotCutoff = params.dotplotCutoff != null ? "--dotplot_cutoff $params.dotplotCutoff" : ""
-    def terms = params.enrichTerms != null ? "--enrich_terms ${params.enrichTerms.join(" ")}" : ""
-
-    """
-    Gene_set_enrichment_analysis.py \
-    $nPlot \
-    $dotplotCutoff \
-    $terms \
-    --in_files $diffExpr \
-    --output_folder \$PWD
-    """
-	
-}
-
+//Runs differential gene expression analysis. Takes h5ad file with leiden groups from cell typing process.
 process diffGeneExpr {
     publishDir(
-        path: "${params.outputFolder}/differentialGeneExpression",
+        path: "${params.outputFolder}/DifferentialGeneExpression",
         mode: 'copy'
     )
     
@@ -259,6 +234,38 @@ process diffGeneExpr {
     --in_file $leidenData \
     --output_folder .
     """
+}
+
+
+//Gene set enrichment analysis. Takes results from differential gene expression process.
+process gsea {
+    publishDir(
+        path: "${params.outputFolder}/GeneSetEnrichmentAnalysis",
+	mode: 'copy'
+	)
+
+    input:
+    path diffExpr
+    
+    output:
+    path "*.png"
+    path "*.csv"
+    
+    script:
+
+    def nPlot = params.nTopTermEnrichPlot != null ? "--n_top_term_enrich_plot $params.nTopTermEnrichPlot" : ""
+    def dotplotCutoff = params.dotplotCutoff != null ? "--dotplot_cutoff $params.dotplotCutoff" : ""
+    def terms = params.enrichTerms != null ? "--enrich_terms ${params.enrichTerms.join(" ")}" : ""
+
+    """
+    Gene_set_enrichment_analysis.py \
+    $nPlot \
+    $dotplotCutoff \
+    $terms \
+    --in_files $diffExpr \
+    --output_folder \$PWD
+    """
+	
 }
 
 workflow {
