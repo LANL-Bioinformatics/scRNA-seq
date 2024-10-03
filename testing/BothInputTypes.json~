@@ -21,17 +21,7 @@
         "Raw_File_Name": {
           "h5-unfiltered": "/panfs/biopan04/unr_thailand/covid_dataset/data/GSM4674662_CM3_CM4_raw_feature_bc_matrix.h5"
         }
-       },
-	{
-	    "Sample_Name": "Y-3W",
-	    "Condition": "Control",
-	    "Batch": "Chen et al",
-	    "File_Name": {
-		"matrix": "/panfs/biopan04/unr_thailand/covid_dataset/data/GSM3087626_DTM-Y_PBMC_methanol-3W+SSC_matrix.mtx.gz",
-		"genes": "/panfs/biopan04/unr_thailand/covid_dataset/data/GSM3087626_DTM-Y_PBMC_methanol-3W+SSC_genes.tsv.gz",
-		"barcodes": "/panfs/biopan04/unr_thailand/covid_dataset/data/GSM3087626_DTM-Y_PBMC_methanol-3W+SSC_barcodes.tsv.gz"
-	    }
-	},
+      },
        {
          "Sample_Name": "X-3W",
          "Condition": "Control",

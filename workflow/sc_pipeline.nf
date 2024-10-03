@@ -4,7 +4,7 @@ import groovy.json.JsonSlurper
 
 process cellTyping {
     publishDir(
-        path: "${params.outputFolder}",
+        path: "${params.outputFolder}/cellTyping",
         mode: 'copy'
     )
     input:
@@ -28,7 +28,7 @@ process cellTyping {
     }
 
     """
-    ${workflow.projectDir}/../scripts/Cluster_cell_type.py \
+    Cluster_cell_type.py \
     $clusterRes \
     $percentile \
     $cellTypes \
@@ -41,11 +41,9 @@ process cellTyping {
 //takes qc-filtered h5ad files. 
 //Produces a series of graphs and integrated.h5ad file with all samples combined, normalized, and batch corrected
 process integratedDatasetQC {
-    memory { 1.GB * task.attempt }
-    errorStrategy { task.exitStatus in 137..140 ? 'retry' : 'terminate' }
-    maxRetries 7
+    
     publishDir(
-        path: "${params.outputFolder}",
+        path: "${params.outputFolder}/QC",
         mode: 'copy'
     )
 
@@ -66,7 +64,7 @@ process integratedDatasetQC {
 
     //invoke script
     """
-    ${workflow.projectDir}/../scripts/QC_intergrated_dataset.py \
+    QC_intergrated_dataset.py \
     $hvgTop \
     $pcaComps \
     $nNeighbors \
@@ -81,7 +79,7 @@ process integratedDatasetQC {
 //Produces a series of plots comparing the samples inside each treatment/outcome group.
 process plotsAcrossGroupsQC {
     publishDir(
-        path: "${params.outputFolder}",
+        path: "${params.outputFolder}/QC",
         mode: 'copy'
     )
     input:
@@ -93,7 +91,7 @@ process plotsAcrossGroupsQC {
     script:
     //invoke script
     """
-    ${workflow.projectDir}/../scripts/QC_plots_across_groups.py \
+    QC_plots_across_groups.py \
     --in_files $annData \
     --output_folder \$PWD \
     """
@@ -102,12 +100,15 @@ process plotsAcrossGroupsQC {
 //takes in one sample (h5 or mtx/tsv files) and associated metadata.
 //Runs sample-specific QC and outputs h5ad files that preserve annotation
 process perSampleQC {
+
+    //ensure that each sample has enough memory to go through QC
+    //retries with increasing memory up to available limit
     memory { 2.GB * task.attempt }
-    errorStrategy { task.exitStatus in 137..140 ? 'retry' : 'terminate' }
-    maxRetries 3
+    errorStrategy { task.exitStatus in 137..140 ? 'retry' : 'finish' }
+    
     tag "${md["sampleName"]}"
     publishDir(
-        path: "${params.outputFolder}",
+        path: "${params.outputFolder}/QC",
         mode: 'copy'
     )
     input:
@@ -158,7 +159,7 @@ process perSampleQC {
     
     //invoke script with arguments
     """
-    ${workflow.projectDir}/../scripts/QC_per_sample.py \
+    QC_per_sample.py \
     $sampleName \
     $condition \
     $batch \
@@ -177,28 +178,58 @@ process perSampleQC {
 
 process cellComposition {
     publishDir(
-        path: "${params.outputFolder}",
+        path: "${params.outputFolder}/cellComposition",
         mode: 'copy'
     )
     input:
     path leidenData
 
     output:
-    path "*"
+    path "*.png"
 
     script:
     def padj = params.pAdj != null ? "--p_adj $params.pAdj" : ""
     """
-    ${workflow.projectDir}/../scripts/Cell_composition_analysis.py \
+    Cell_composition_analysis.py \
     $padj \
     --in_file $leidenData \
     --output_folder .
     """
 }
 
+process gsea {
+    publishDir(
+        path: "${params.outputFolder}/geneSetEnrichmentAnalysis",
+	mode: 'copy'
+	)
+
+    input:
+    path diffExpr
+    
+    output:
+    path "*.png"
+    path "*.csv"
+    
+    script:
+
+    def nPlot = params.nTopTermEnrichPlot != null ? "--n_top_term_enrich_plot $params.nTopTermEnrichPlot" : ""
+    def dotplotCutoff = params.dotplotCutoff != null ? "--dotplot_cutoff $params.dotplotCutoff" : ""
+    def terms = params.enrichTerms != null ? "--enrich_terms ${params.enrichTerms.join(" ")}" : ""
+
+    """
+    Gene_set_enrichment_analysis.py \
+    $nPlot \
+    $dotplotCutoff \
+    $terms \
+    --in_files $diffExpr \
+    --output_folder \$PWD
+    """
+	
+}
+
 process diffGeneExpr {
     publishDir(
-        path: "${params.outputFolder}",
+        path: "${params.outputFolder}/differentialGeneExpression",
         mode: 'copy'
     )
     
@@ -206,7 +237,12 @@ process diffGeneExpr {
     path leidenData
 
     output:
-    path "*"
+    //generic outputs
+    path "*.png"
+    path "*.pdf"
+    path "*.csv"
+    //passed downstream
+    path "*_all_genes_differential_gene_expr_results.csv", emit: geneExprResults
 
     script:
     def padj = params.pAdj != null ? "--p_adj $params.pAdj" : ""
@@ -215,7 +251,7 @@ process diffGeneExpr {
     def minCells = params.minCellsPerGroup != null ? "--min_cells_per_group $params.minCellsPerGroup" : ""
 
     """
-    ${workflow.projectDir}/../scripts/Differential_gene_expression.py \
+    Differential_gene_expression.py \
     $padj \
     $log2fc \
     $nSig \
@@ -296,8 +332,12 @@ workflow {
     //cell typing
     cellTyping(integratedDatasetQC.out.integrated)
 
+    //overall cell composition, DGE
     cellComposition(cellTyping.out.leidenAnndata)
     diffGeneExpr(cellTyping.out.leidenAnndata)
 
+    //Gene set enrichment analysis
+    gsea(diffGeneExpr.out.geneExprResults)
+    
 
 }

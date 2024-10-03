@@ -183,7 +183,7 @@ def run_pyDeSeq2(adata_group, condition, condition2, cell_subset, cell_subset_2,
         # Creates volcano plot
         print("\nCreating the volcano plot... ")
         df["padj"] = df["padj"].fillna(1)
-        visuz.gene_exp.volcano(df=df, lfc="log2FoldChange", 
+        visuz.GeneExpression.volcano(df=df, lfc="log2FoldChange", 
                             pv="padj", 
                             axtickfontname="DejaVu Sans", 
                             axlabelfontname="DejaVu Sans", 
