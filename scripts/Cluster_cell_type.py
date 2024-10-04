@@ -118,7 +118,7 @@ cell_map = dict(map(lambda i,j : (int(i),j) , groups,calculated_cell_types_gene)
 
 
 adata.obs["merged leiden"] = (adata.obs["leiden"].map(lambda x: cell_map.get(int(x))).astype("category"))
-# print(adata.obs["merged leiden"])
+print(adata.obs["merged leiden"])
 
 
 #Saves new h5ad file with updated names 

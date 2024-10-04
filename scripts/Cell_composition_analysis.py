@@ -29,22 +29,22 @@ print("***********************")
 out_dir = args.out_dir
 adata = anndata.read(out_dir+"adata_w_leiden_groups.h5ad")
 
-
+print(adata)
+print(adata.obs["merged leiden"])
 # Uses colors from leiden clusters for barplots
 color_set = adata.uns["leiden_colors"]
 
 
-df = pd.DataFrame(columns=adata.obs.leiden.unique())
+df = pd.DataFrame(columns=adata.obs["merged leiden"].unique())
 
 # Creates df with the columns as the different cell types and the rows are the outcomes with the data values being the percent cells (decimal)
 for con in adata.obs.condition.unique():
     adata_subset = adata[adata.obs["condition"] == con]
     total_cells = len(adata_subset.obs_names)
     groups_avg = []
-    for group_num in adata.obs.leiden.unique():
-        adata_subset_group = adata_subset[adata_subset.obs["leiden"] == group_num]
+    for group_num in adata.obs["merged leiden"].unique():
+        adata_subset_group = adata_subset[adata_subset.obs["merged leiden"] == group_num]
         groups_avg.append(len(adata_subset_group.obs_names)/total_cells)
-    
     df.loc[con] = groups_avg
 
 df.to_csv(out_dir+"composition_percent_by_cell_type.csv")

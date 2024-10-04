@@ -1,5 +1,5 @@
 # Runs differential expression between 2 conditions including psuedobulk and cell types
-
+import sys
 import numpy as np
 import matplotlib.pyplot as plt
 import anndata
@@ -199,7 +199,11 @@ adata_group.X = adata_group.layers["counts"]
 conditions = list(set(adata_group.obs.condition.to_list()))
 conditions.sort()
 
-cell_groups = list(set(adata_group.obs.leiden.to_list()))
+if len(conditions) == 1:
+    print("Only 1 condition, cannot run differential_gene_expression")
+    sys.exit()
+
+cell_groups = list(set(adata_group.obs["merged leiden"].to_list()))
 
 cell_groups.append("Psuedobulk")
 cell_groups.sort()
