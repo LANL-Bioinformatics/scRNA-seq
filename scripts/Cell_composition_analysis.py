@@ -32,8 +32,6 @@ print("***********************")
 out_dir = args.out_dir
 adata = anndata.read(args.in_file)
 
-print(adata)
-print(adata.obs["merged leiden"])
 # Uses colors from leiden clusters for barplots
 color_set = adata.uns["leiden_colors"]
 
