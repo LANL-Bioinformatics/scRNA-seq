@@ -9,7 +9,6 @@ warnings.filterwarnings("ignore")  # plotnine has a lot of MatplotlibDeprecation
 import pandas as pd
 import gseapy as gp
 import os
-import sys
 
 
 # Define the parser
@@ -35,7 +34,6 @@ print("***********************")
 out_dir = args.out_dir
 
 plt.switch_backend('agg')
-
 # Gets list of files with the right extenstion
 dir_list = os.listdir(out_dir)
 #files = [f for f in dir_list if "_all_genes_differential_gene_expr_results.csv" in f]

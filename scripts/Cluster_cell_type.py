@@ -38,7 +38,7 @@ print("***********************")
 
 # Load data from intergrated sample QC output
 out_dir = args.out_dir
-adata = anndata.read(out_dir+args.integrated_data)
+adata = anndata.read(args.integrated_data)
 
 # Leiden Clustering 
 plt.switch_backend('agg')

@@ -30,7 +30,7 @@ print("***********************")
 
 # Read data file with cell type names
 out_dir = args.out_dir
-adata = anndata.read(out_dir+"adata_w_leiden_groups.h5ad")
+adata = anndata.read(args.in_file)
 
 print(adata)
 print(adata.obs["merged leiden"])
