@@ -1,3 +1,7 @@
 data/
 .nextflow*
 work/
+scripts/HDBScan.py
+environment.yml
+pertpy/
+pydeseq2/
