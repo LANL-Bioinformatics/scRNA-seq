@@ -40,10 +40,6 @@ plt.switch_backend('agg')
 dir_list = os.listdir(out_dir)
 #files = [f for f in dir_list if "_all_genes_differential_gene_expr_results.csv" in f]
 files = args.in_files
-if len(files) == 0 :
-    print("\nOnly 1 condtion, not running gene set enrichment")
-    sys.exit()
-
 files.sort()
 
 for file in files:

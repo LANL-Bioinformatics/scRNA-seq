@@ -12,16 +12,13 @@ warnings.filterwarnings("ignore")  # plotnine has a lot of MatplotlibDeprecation
 import pandas as pd
 import argparse
 import numpy as np
-import hdbscan
-from sklearn.datasets import make_blobs
-from sklearn.metrics import silhouette_score, adjusted_rand_score
 
 # Define the parser
 parser = argparse.ArgumentParser(description='Cluster Cell Type')
 
 parser.add_argument('--cluster_resolution', dest='cluster_resolution', type=float, default=0.4)
 parser.add_argument('--percentile', dest='percentile', type=float, default=90)
-parser.add_argument('--cell_types', dest='cell_types', nargs='*', default= ["T cells: D3G,TRBC2,CD3D,CD3E,IL7R,LTB", "NK cells:TYROBP,FCGR3A,NKG7,TRDC,KLRF1,KLRD1,GNLY", "B cells: MS4A1,PXK,CD19,CD74,CD79A,IGHM", "Plasma cells: JCHAIN,MZB1,IGHG1,SPAG4", "Proliferating lymphocytes: MKI67,CD3G,FCGR3A", "Monocytes: CD14, FCGR3A,LYZ,CFP,APOBEC3A,CCR2", "cDCs: CD1C,BDCA4,FCER1A", "pDCs: SERPINF1,BST2,MAP3K2,KLK1,TRADD,CLEC4C", "platelets: PF4,GP1BA,SELP,PPBP,ITGA2B", "Erythrocytes: HBA2,HBA1,HBB"])
+parser.add_argument('--cell_types', dest='cell_types', nargs='*', default= ["CD4 T cells: CD4", "CD8 T cells: CD8A, CD8B", "NK cells:FCGR3A,TROBP", "B cells: MS4A1,CD19,CD74,CD79A,IGHM", "Plasma cells: JCHAIN,MZB1,IGHG1", "Proliferating lymphocytes: MKI67,CD3G,FCGR3A", "Monocytes: CD14, FCGR3A,LYZ", "cDCs:HLA-DQA1,SLC38A1", "pDCs:BST2,MAP3K2,TRADD", "Platelets: PF4,PPBP,ITGA2B", "Erythrocytes: HBA2,HBA1,HBB"])
 parser.add_argument('--control_name', dest='control_name', default="Control")
 parser.add_argument('--integrated_data', dest= 'integrated_data', required = True)
 parser.add_argument('--output_folder', action="store", dest='out_dir', required=True)

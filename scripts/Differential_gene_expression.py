@@ -66,14 +66,14 @@ def run_pyDeSeq2(adata_group, condition, condition2, cell_subset, cell_subset_2,
         cell_subset_2 = sum_by_sample(cell_subset_2)
     # Further subsets the data by cell type
     else:
-        cell_subset = cell_subset[cell_subset.obs.leiden == cell_group]
+        cell_subset = cell_subset[cell_subset.obs["merged leiden"] == cell_group]
         print(cell_subset)
         if len(cell_subset.obs_names) < min_cells:
             print("Not enough cells, moving to next type ...")
             return
         cell_subset = sum_by_sample(cell_subset)
 
-        cell_subset_2 = cell_subset_2[cell_subset_2.obs.leiden == cell_group]    
+        cell_subset_2 = cell_subset_2[cell_subset_2.obs["merged leiden"] == cell_group]    
         print(cell_subset_2)
         if len(cell_subset_2.obs_names) < min_cells:
             print("Not enough cells, moving to next type ...")
