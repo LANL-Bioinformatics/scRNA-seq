@@ -12,14 +12,17 @@ warnings.filterwarnings("ignore")  # plotnine has a lot of MatplotlibDeprecation
 import pandas as pd
 import argparse
 import numpy as np
-
+import hdbscan
+from sklearn.datasets import make_blobs
+from sklearn.metrics import silhouette_score, adjusted_rand_score
 
 # Define the parser
 parser = argparse.ArgumentParser(description='Cluster Cell Type')
 
 parser.add_argument('--cluster_resolution', dest='cluster_resolution', type=float, default=0.4)
-parser.add_argument('--percentile', dest='percentile', type=int, default=80)
+parser.add_argument('--percentile', dest='percentile', type=float, default=90)
 parser.add_argument('--cell_types', dest='cell_types', nargs='*', default= ["T cells: D3G,TRBC2,CD3D,CD3E,IL7R,LTB", "NK cells:TYROBP,FCGR3A,NKG7,TRDC,KLRF1,KLRD1,GNLY", "B cells: MS4A1,PXK,CD19,CD74,CD79A,IGHM", "Plasma cells: JCHAIN,MZB1,IGHG1,SPAG4", "Proliferating lymphocytes: MKI67,CD3G,FCGR3A", "Monocytes: CD14, FCGR3A,LYZ,CFP,APOBEC3A,CCR2", "cDCs: CD1C,BDCA4,FCER1A", "pDCs: SERPINF1,BST2,MAP3K2,KLK1,TRADD,CLEC4C", "platelets: PF4,GP1BA,SELP,PPBP,ITGA2B", "Erythrocytes: HBA2,HBA1,HBB"])
+parser.add_argument('--control_name', dest='control_name', default="Control")
 parser.add_argument('--integrated_data', dest= 'integrated_data', required = True)
 parser.add_argument('--output_folder', action="store", dest='out_dir', required=True)
 
@@ -30,6 +33,7 @@ print("*** Code parameters ***")
 print("Leiden cluster resolution:", args.cluster_resolution)
 print("Gene expression values above this percentile are taken for cell typing: ", args.percentile)
 print("Cell Types: ", args.cell_types)
+print("Control group name: ", args.control_name)
 print("Input File: ", args.integrated_data)
 print("Output folder: ", args.out_dir)
 print("***********************")
@@ -37,7 +41,7 @@ print("***********************")
 
 # Load data from intergrated sample QC output
 out_dir = args.out_dir
-adata = anndata.read(args.integrated_data)
+adata = anndata.read(out_dir+args.integrated_data)
 
 # Leiden Clustering 
 plt.switch_backend('agg')
@@ -74,7 +78,6 @@ for item in args.cell_types:
             df = df.reset_index(drop=True)
 
             # Figures out the expression level at the top percentile and creates a dataframe only containing values above it
-            print(args.percentile)
             threshold = np.percentile(df[gene], args.percentile)
             highest_expr_data = df.loc[df[gene] > threshold]
             cell_counts = highest_expr_data['leiden'].value_counts()
@@ -106,41 +109,29 @@ print(df_cell_type_summary)
 df_cell_type_summary.to_csv(os.path.join(out_dir,"all_types_marker_gene_average.csv"))
 
 calculated_cell_types_gene = df_cell_type_summary["Top Cell Type"].to_numpy()
+# print(calculated_cell_types_gene)
+
+groups = df_cell_type_summary.index.to_numpy()
+# print(groups)
+
+cell_map = dict(map(lambda i,j : (int(i),j) , groups,calculated_cell_types_gene))
 
 
-# Rename groups with calculated names
-unique_calculated_cell_types_gene = []
-count = 0
-for cell_type in calculated_cell_types_gene:
-    if cell_type in unique_calculated_cell_types_gene:
-        unique_calculated_cell_types_gene.append(cell_type+" "+str(count))
-    else:
-        unique_calculated_cell_types_gene.append(cell_type)
+adata.obs["merged leiden"] = (adata.obs["leiden"].map(lambda x: cell_map.get(int(x))).astype("category"))
+# print(adata.obs["merged leiden"])
 
-
-    count+=1
-
-
-calculated_cell_types_gene = unique_calculated_cell_types_gene
-
-
-#Renames groups
-print("\nFinal Cell Types ...")
-print(calculated_cell_types_gene)
-adata.rename_categories('leiden', calculated_cell_types_gene)
 
 #Saves new h5ad file with updated names 
-
 adata.write_h5ad(Path(os.path.join(out_dir, "adata_w_leiden_groups.h5ad")))
 
 #Replots the leiden clustering with new groups
 with plt.rc_context():
     fig, ax = plt.subplots(figsize=(10, 7))
-    scanpy.pl.umap(adata, color='leiden', ax=ax)
+    scanpy.pl.umap(adata, color='merged leiden', ax=ax)
     plt.savefig(os.path.join(out_dir,"UMAP_leiden_automated_names.png"), bbox_inches='tight')
 with plt.rc_context():
     fig, ax = plt.subplots(figsize=(10, 7))
-    scanpy.pl.umap(adata, color='leiden', legend_loc='on data')
+    scanpy.pl.umap(adata, color='merged leiden', legend_loc='on data')
     plt.savefig(os.path.join(out_dir,"UMAP_leiden_automated_names_labeled_on_plot_.png"), bbox_inches='tight')
 
 
@@ -175,11 +166,28 @@ for condition in condition_list:
 
     with plt.rc_context():
         fig, ax = plt.subplots(figsize=(10, 7))
-        scanpy.pl.umap(subset_adata, color='leiden', ax=ax)
+        scanpy.pl.umap(subset_adata, color='merged leiden', size=3, ax=ax)
+        plt.title(condition)
         plt.savefig(os.path.join(out_dir,"UMAP_leiden_"+condition+"_automated_names.png"), bbox_inches='tight')
     with plt.rc_context():
         fig, ax = plt.subplots(figsize=(10, 7))
-        scanpy.pl.umap(subset_adata, color='leiden', legend_loc='on data')
+        scanpy.pl.umap(subset_adata, color='merged leiden', size=3, legend_loc='on data')
+        plt.title(condition)
         plt.savefig(os.path.join(out_dir,"UMAP_leiden_"+condition+"_automated_names_labeled_on_plot_.png"), bbox_inches='tight')
+
+
+
+# Creates plots with only the treatment data
+adata = adata[adata.obs.condition != args.control_name]
+with plt.rc_context():
+    fig, ax = plt.subplots(figsize=(10, 7))
+    scanpy.pl.umap(adata, color='merged leiden', size=3, ax=ax)
+    plt.title("Treatment")
+    plt.savefig(os.path.join(out_dir,"UMAP_leiden_Treatment_automated_names.png"), bbox_inches='tight')
+with plt.rc_context():
+    fig, ax = plt.subplots(figsize=(10, 7))
+    scanpy.pl.umap(adata, color='merged leiden', size=3, legend_loc='on data')
+    plt.title("Treatment")
+    plt.savefig(os.path.join(out_dir,"UMAP_leiden_Treatment_automated_names_labeled_on_plot_.png"), bbox_inches='tight')
 
 

@@ -104,10 +104,10 @@ matched_files = args.in_files
 adata_list = []
 for sample in matched_files:
     print("Loading sample... "+sample)
-    adata_list.append(scanpy.read_h5ad(sample))
+    adata_list.append(scanpy.read_h5ad(args.out_dir+sample))
 
 # Combines sample anndata into 1 anndata
-adata = scanpy.concat(adata_list, join="outer")
+adata = scanpy.concat(adata_list, join="inner")
 
 
 intergrated_dataset_qc(adata, args.HVG_num_top_genes, args.PCA_N_Comps, args.Neighbors_Number, args.Neighbors_N_PCS, args.Scale_Max, args.out_dir)
