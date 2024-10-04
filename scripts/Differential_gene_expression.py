@@ -1,5 +1,7 @@
+#!/usr/bin/env python
 # Runs differential expression between 2 conditions including psuedobulk and cell types
 import sys
+import os
 import numpy as np
 import matplotlib.pyplot as plt
 import anndata
@@ -26,6 +28,7 @@ parser.add_argument('--p_adj', dest='p_adj', type=float, default=0.05)
 parser.add_argument('--log2fc', dest='log2fc', type=float, default=0.5)
 parser.add_argument('--heatmap_num_sig_genes', dest='heatmap_num_sig_genes', type=int, default=50)
 parser.add_argument('--min_cells_per_group', dest='min_cells', type=int, default=100)
+parser.add_argument('--in_file', dest="in_file", required=True)
 parser.add_argument('--output_folder', action="store", dest='out_dir', required=True)
 
 # Parse the command line arguments and store in args
@@ -36,6 +39,7 @@ print("P-value adjusted significance level: ", args.p_adj)
 print("Log2 foldchange significance level (absolute value): ", args.log2fc)
 print("Number of significant genes for heatmap: ", args.heatmap_num_sig_genes)
 print("Minimum number of cells for cell type comparisons: ", args.min_cells)
+print("Input file: ", args.in_file)
 print("Output folder: ", args.out_dir)
 print("***********************")
 
@@ -116,7 +120,7 @@ def run_pyDeSeq2(adata_group, condition, condition2, cell_subset, cell_subset_2,
     with plt.rc_context():
         fig, ax = plt.subplots(figsize=(10, 7))
         scanpy.pl.pca(dds, color="condition", size=200)
-        plt.savefig(out_dir+cell_group+"_"+condition+"_"+condition2+"_Condition_PCA.png")
+        plt.savefig(os.path.join(out_dir,cell_group+"_"+condition+"_"+condition2+"_Condition_PCA.png"))
 
 
     # NOTE: DeseqStats replaces "_" with "-" so you need to change the name of the contrasts if needed
@@ -127,7 +131,7 @@ def run_pyDeSeq2(adata_group, condition, condition2, cell_subset, cell_subset_2,
     # Saves summary info to df
     df = stat_res.results_df
 
-    df.sort_values('padj').to_csv(out_dir+cell_group+"_"+condition+"_"+condition2+"_all_genes_differential_gene_expr_results.csv")
+    df.sort_values('padj').to_csv(os.path.join(out_dir,cell_group+"_"+condition+"_"+condition2+"_all_genes_differential_gene_expr_results.csv"))
 
     # Finds signifcant genes that also had a log 2 fold change > user_input
     sigs = df[(df.padj < args.p_adj) & (abs(df.log2FoldChange) > args.log2fc)]
@@ -135,7 +139,7 @@ def run_pyDeSeq2(adata_group, condition, condition2, cell_subset, cell_subset_2,
     print("\n",sigs[sigs.columns[0]].count(), " genes were found to be signficant")
 
     # Creates file with the averages for each condition
-    with open(out_dir+cell_group+"_"+condition+"_"+condition2+"_significant_averages.csv", "w") as file:
+    with open(os.path.join(out_dir,cell_group+"_"+condition+"_"+condition2+"_significant_averages.csv"), "w") as file:
         writer = csv.writer(file)
         writer.writerow([condition+"Average Expr Non-Normalized",condition2+"Average Expr Non-Normalized",'log2FoldChange', 'padj'])
         for index, row in sigs.iterrows():
@@ -163,13 +167,13 @@ def run_pyDeSeq2(adata_group, condition, condition2, cell_subset, cell_subset_2,
         grapher = pd.DataFrame(dds_sigs.layers['log1p'].T,
                             index=dds_sigs.var_names, columns=dds_sigs.obs_names)
 
-        grapher.to_csv(out_dir+cell_group+"_"+condition+"_"+condition2+"_log_dif_expression_table.csv", sep=',', encoding='utf-8')
+        grapher.to_csv(os.path.join(out_dir,cell_group+"_"+condition+"_"+condition2+"_log_dif_expression_table.csv"), sep=',', encoding='utf-8')
 
 
         # Creates heatmap
         fig, ax = plt.subplots(figsize=(30, 10))
         sns.clustermap(grapher, z_score=0, cmap = 'RdYlBu_r', yticklabels=True)
-        plt.savefig(out_dir+cell_group+"_"+condition+"_"+condition2+"_heatmap_all_top.pdf", format="pdf", dpi=1000)
+        plt.savefig(os.path.join(out_dir,cell_group+"_"+condition+"_"+condition2+"_heatmap_all_top.pdf"), format="pdf", dpi=1000)
 
 
     # Creates volcano if there is at least 1 signifant gene down and up regulated
@@ -186,10 +190,10 @@ def run_pyDeSeq2(adata_group, condition, condition2, cell_subset, cell_subset_2,
                             lfc_thr=(args.log2fc,args.log2fc),
                             pv_thr=(args.p_adj,args.p_adj),
                             color=("red","grey","blue"), 
-                            figname=out_dir+cell_group+"_"+condition+"_"+condition2+"_volcano_plot", figtype="pdf")
+                            figname=os.path.join(out_dir,cell_group+"_"+condition+"_"+condition2+"_volcano_plot"), figtype="pdf")
 
-
-adata_group = anndata.read_h5ad(args.out_dir+"adata_w_leiden_groups.h5ad")
+plt.switch_backend('agg')
+adata_group = anndata.read_h5ad(args.in_file)
 print(adata_group)
 
 #Resets X to be the counts that are not normalized 

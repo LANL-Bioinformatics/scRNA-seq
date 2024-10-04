@@ -1,11 +1,11 @@
 {
-    "sampleInfo":"$projectdir/../reference_files/reference_files/Example_Input.json",
+    "sampleInfo": "${projectDir}/../testing/BothInputTypes.json",
     "clusterResolution": 0.4,
     "minCellsPerGene": 3, 
     "minGenesPerCell": 200,
     "mitochondrialContentMax": 20,
-    "removeMitochondrialGenes": "True",
-    "removeRibosomalGenes": "True",
+    "removeMitochondrialGenes": true,
+    "removeRibosomalGenes": true,
     "hvgNumTopGenes": 5000,
     "pcaNcomps": 20,
     "neighborsNumber": 30,
@@ -31,5 +31,4 @@
         "platelets": "PF4, GP1BA, SELP, PPBP, ITGA2B",
         "Erythrocytes": "HBA2, HBA1, HBB"
     }
-
 }
