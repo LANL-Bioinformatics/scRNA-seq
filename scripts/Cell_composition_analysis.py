@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 # Plots percent of each cell type and runs scCODA to deterine credible differences between condition groups
 
 import matplotlib.pyplot as plt
@@ -8,12 +10,14 @@ warnings.filterwarnings("ignore")  # plotnine has a lot of MatplotlibDeprecation
 import pandas as pd
 import pertpy as pt #contains the scCODA library
 import argparse
+import os
 
 
 # Define the parser
 parser = argparse.ArgumentParser(description='Cell Composition Analysis')
 
 parser.add_argument('--p_adj', dest='p_adj', type=float, default=0.05)
+parser.add_argument('--in_file', dest='in_file', required=True)
 parser.add_argument('--output_folder', action="store", dest='out_dir', required=True)
 
 # Parse the command line arguments and store in args
@@ -21,13 +25,14 @@ args = parser.parse_args()
 
 print("*** Code parameters ***")
 print("P-value adjusted significance level: ", args.p_adj)
+print("Input file: ", args.in_file)
 print("Output folder: ", args.out_dir)
 print("***********************")
 
 
 # Read data file with cell type names
 out_dir = args.out_dir
-adata = anndata.read(out_dir+"adata_w_leiden_groups.h5ad")
+adata = anndata.read(args.in_file)
 
 
 # Uses colors from leiden clusters for barplots
@@ -51,11 +56,12 @@ df.to_csv(out_dir+"composition_percent_by_cell_type.csv")
 print(df)
 
 # Create barplot of cell type percentages seperated out by outcome
+plt.switch_backend('agg')
 with plt.rc_context():
     fig, ax = plt.subplots(figsize=(10, 7))
     df.plot.barh(stacked=True, color=color_set)
     plt.legend(loc='center right',bbox_to_anchor=(1.35,0.5)) 
-    plt.savefig(out_dir+"cell_type_by_condition_composition_bar_plot.png", bbox_inches='tight')
+    plt.savefig(os.path.join(out_dir,"cell_type_by_condition_composition_bar_plot.png"), bbox_inches='tight')
 
 
 
@@ -68,7 +74,7 @@ mdata = sccoda.load(adata, type="cell_level", generate_sample_level=True, cell_t
 with plt.rc_context():  
     fig, ax = plt.subplots(figsize=(12, 7))
     sccoda.plot_boxplots(mdata, feature_name="condition")
-    plt.savefig(out_dir+"whole_dataset_coda_boxplot.png", bbox_inches='tight')
+    plt.savefig(os.path.join(out_dir,"whole_dataset_coda_boxplot.png"), bbox_inches='tight')
 
 
 # Function runs scCODA between 2 conditions in adata
@@ -94,7 +100,7 @@ def run_sccoda(condition):
     # Creates a boxplot of the 2 conditions
     with plt.rc_context():
         sccoda.plot_boxplots(sccoda_data, modality_key="coda_mod", feature_name="condition", add_dots=True)
-        plt.savefig(out_dir+condition[0]+"_"+condition[1]+"_coda_boxplot.png", bbox_inches='tight')
+        plt.savefig(os.path.join(out_dir, condition[0]+"_"+condition[1]+"_coda_boxplot.png"), bbox_inches='tight')
 
     # Model setup and inference
     sccoda_data = sccoda_model.prepare(
@@ -126,7 +132,7 @@ def run_sccoda(condition):
         # creates a barplot of the credible results
         with plt.rc_context():
             sccoda.plot_effects_barplot(sccoda_data, modality_key="coda_mod", parameter="Final Parameter")
-            plt.savefig(out_dir+condition[0]+"_"+condition[1]+"_credible_coda_bar_plot.png", bbox_inches='tight')
+            plt.savefig(os.path.join(out_dir, condition[0]+"_"+condition[1]+"_credible_coda_bar_plot.png"), bbox_inches='tight')
 
 
 conditions = list(set(adata.obs.condition.to_list()))
