@@ -32,8 +32,8 @@ print("Output folder: ", args.out_dir)
 print("***********************")
 
 out_dir = args.out_dir
-plt.switch_backend('agg')
 
+plt.switch_backend('agg')
 # Gets list of files with the right extenstion
 dir_list = os.listdir(out_dir)
 #files = [f for f in dir_list if "_all_genes_differential_gene_expr_results.csv" in f]

@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # Runs differential expression between 2 conditions including psuedobulk and cell types
-
+import sys
 import os
 import numpy as np
 import matplotlib.pyplot as plt
@@ -66,14 +66,14 @@ def run_pyDeSeq2(adata_group, condition, condition2, cell_subset, cell_subset_2,
         cell_subset_2 = sum_by_sample(cell_subset_2)
     # Further subsets the data by cell type
     else:
-        cell_subset = cell_subset[cell_subset.obs.leiden == cell_group]
+        cell_subset = cell_subset[cell_subset.obs["merged leiden"] == cell_group]
         print(cell_subset)
         if len(cell_subset.obs_names) < min_cells:
             print("Not enough cells, moving to next type ...")
             return
         cell_subset = sum_by_sample(cell_subset)
 
-        cell_subset_2 = cell_subset_2[cell_subset_2.obs.leiden == cell_group]    
+        cell_subset_2 = cell_subset_2[cell_subset_2.obs["merged leiden"] == cell_group]    
         print(cell_subset_2)
         if len(cell_subset_2.obs_names) < min_cells:
             print("Not enough cells, moving to next type ...")
@@ -203,7 +203,12 @@ adata_group.X = adata_group.layers["counts"]
 conditions = list(set(adata_group.obs.condition.to_list()))
 conditions.sort()
 
-cell_groups = list(set(adata_group.obs.leiden.to_list()))
+if len(conditions) == 1:
+    print("Only 1 condition, cannot run differential_gene_expression")
+    sys.exit()
+
+cell_groups = list(set(adata_group.obs["merged leiden"].to_list()))
+
 cell_groups.append("Psuedobulk")
 cell_groups.sort()
 

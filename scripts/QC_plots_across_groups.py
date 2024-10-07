@@ -89,7 +89,7 @@ for sample in matched_files:
     adata_list.append(scanpy.read_h5ad(sample))
 
 # Combines sample anndatas into 1 anndata
-adata = scanpy.concat(adata_list, join="outer")
+adata = scanpy.concat(adata_list, join="inner")
 
 print(adata)
 qc_plots_across_groups(adata, args.out_dir)
