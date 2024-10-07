@@ -104,7 +104,7 @@ matched_files = args.in_files
 adata_list = []
 for sample in matched_files:
     print("Loading sample... "+sample)
-    adata_list.append(scanpy.read_h5ad(args.out_dir+sample))
+    adata_list.append(scanpy.read_h5ad(sample))
 
 # Combines sample anndata into 1 anndata
 adata = scanpy.concat(adata_list, join="inner")
