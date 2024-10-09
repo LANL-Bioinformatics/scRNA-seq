@@ -1,0 +1,142 @@
+{
+    "Samples": [
+       {
+          "Sample_Name": "GSM4674661_CM1_CM2",
+          "Condition": "Moderate Covid",
+          "Batch": "Yao et al.",
+          "File_Name": {
+            "h5": "/panfs/biopan04/unr_thailand/covid_dataset/data/GSM4674661_CM1_CM2_filtered_feature_bc_matrix.h5"
+          },
+          "Raw_File_Name": {
+            "h5": "/panfs/biopan04/unr_thailand/covid_dataset/data/GSM4674661_CM1_CM2_raw_feature_bc_matrix.h5"
+          }
+       },
+       {
+          "Sample_Name": "GSM4674662_CM3_CM4",
+          "Condition": "Moderate Covid",
+          "Batch": "Yao et al.",
+          "File_Name": {
+            "h5-filtered": "/panfs/biopan04/unr_thailand/covid_dataset/data/GSM4674662_CM3_CM4_filtered_feature_bc_matrix.h5"
+          },
+          "Raw_File_Name": {
+            "h5-unfiltered": "/panfs/biopan04/unr_thailand/covid_dataset/data/GSM4674662_CM3_CM4_raw_feature_bc_matrix.h5"
+          }
+        },
+        {
+          "Sample_Name": "GSM4674663_CM5",
+          "Condition": "Moderate Covid",
+          "Batch": "Yao et al.",
+          "File_Name": {
+            "h5-filtered": "/panfs/biopan04/unr_thailand/covid_dataset/data/GSM4674663_CM5_filtered_feature_bc_matrix.h5"
+          },
+          "Raw_File_Name": {
+            "h5-unfiltered": "/panfs/biopan04/unr_thailand/covid_dataset/data/GSM4674663_CM5_raw_feature_bc_matrix.h5"
+          }
+        },
+
+        {
+          "Sample_Name": "GSM4674664_CS7_CS8",
+          "Condition": "Severe Covid",
+          "Batch": "Yao et al.",
+          "File_Name": {
+            "h5-filtered": "/panfs/biopan04/unr_thailand/covid_dataset/data/GSM4674664_CS7_CS8_filtered_feature_bc_matrix.h5"
+          },
+          "Raw_File_Name": {
+            "h5-unfiltered": "/panfs/biopan04/unr_thailand/covid_dataset/data/GSM4674664_CS7_CS8_raw_feature_bc_matrix.h5"
+          }
+        },
+
+        {
+          "Sample_Name": "GSM4674665_CS9_CS10",
+          "Condition": "Severe Covid",
+          "Batch": "Yao et al.",
+          "File_Name": {
+            "h5-filtered": "/panfs/biopan04/unr_thailand/covid_dataset/data/GSM4674665_CS9_CS10_filtered_feature_bc_matrix.h5"
+          },
+          "Raw_File_Name": {
+            "h5-unfiltered": "/panfs/biopan04/unr_thailand/covid_dataset/data/GSM4674665_CS9_CS10_raw_feature_bc_matrix.h5"
+          }
+        },  
+     
+        {
+          "Sample_Name": "GSM4674666_CS11_CS12",
+          "Condition": "Severe Covid",
+          "Batch": "Yao et al.",
+          "File_Name": {
+            "h5-filtered": "/panfs/biopan04/unr_thailand/covid_dataset/data/GSM4674666_CS11_CS12_filtered_feature_bc_matrix.h5"
+          },
+          "Raw_File_Name": {
+            "h5-unfiltered": "/panfs/biopan04/unr_thailand/covid_dataset/data/GSM4674666_CS11_CS12_raw_feature_bc_matrix.h5"
+          }
+        }, 
+
+        {
+          "Sample_Name": "GSM4674667_CR13_CR14",
+          "Condition": "Recovered Covid",
+          "Batch": "Yao et al.",
+          "File_Name": {
+            "h5-filtered": "/panfs/biopan04/unr_thailand/covid_dataset/data/GSM4674667_CR13_CR14_filtered_feature_bc_matrix.h5"
+          },
+          "Raw_File_Name": {
+            "h5-unfiltered": "/panfs/biopan04/unr_thailand/covid_dataset/data/GSM4674667_CR13_CR14_raw_feature_bc_matrix.h5"
+          }
+        }, 
+
+        {
+          "Sample_Name": "GSM4674668_CR15_CR16",
+          "Condition": "Recovered Covid",
+          "Batch": "Yao et al.",
+          "File_Name": {
+            "h5-filtered": "/panfs/biopan04/unr_thailand/covid_dataset/data/GSM4674668_CR15_CR16_filtered_feature_bc_matrix.h5"
+          },
+          "Raw_File_Name": {
+            "h5-unfiltered": "/panfs/biopan04/unr_thailand/covid_dataset/data/GSM4674668_CR15_CR16_raw_feature_bc_matrix.h5"
+          }
+        },
+
+        {
+          "Sample_Name": "GSM4674669_CR17_CR18",
+          "Condition": "Recovered Covid",
+          "Batch": "Yao et al.",
+          "File_Name": {
+            "h5-filtered": "/panfs/biopan04/unr_thailand/covid_dataset/data/GSM4674669_CR17_CR18_filtered_feature_bc_matrix.h5"
+          },
+          "Raw_File_Name": {
+            "h5-unfiltered": "/panfs/biopan04/unr_thailand/covid_dataset/data/GSM4674669_CR17_CR18_raw_feature_bc_matrix.h5"
+          }
+        },
+
+        {
+          "Sample_Name": "X-3H",
+          "Condition": "Control",
+          "Batch": "Chen et al",
+          "File_Name": {
+            "matrix": "/panfs/biopan04/unr_thailand/covid_dataset/data/GSM3087622_DTM-X_PBMC_methanol-3H+SSC_matrix.mtx.gz",
+            "genes": "/panfs/biopan04/unr_thailand/covid_dataset/data/GSM3087622_DTM-X_PBMC_methanol-3H+SSC_genes.tsv.gz",
+            "barcodes": "/panfs/biopan04/unr_thailand/covid_dataset/data/GSM3087622_DTM-X_PBMC_methanol-3H+SSC_barcodes.tsv.gz"
+          }
+        },
+
+        {
+          "Sample_Name": "X-3W",
+          "Condition": "Control",
+          "Batch": "Chen et al",
+          "File_Name": {
+            "matrix": "/panfs/biopan04/unr_thailand/covid_dataset/data/GSM3087624_DTM-X_PBMC_methanol-3W+SSC_matrix.mtx.gz",
+            "genes": "/panfs/biopan04/unr_thailand/covid_dataset/data/GSM3087624_DTM-X_PBMC_methanol-3W+SSC_genes.tsv.gz",
+            "barcodes": "/panfs/biopan04/unr_thailand/covid_dataset/data/GSM3087624_DTM-X_PBMC_methanol-3W+SSC_barcodes.tsv.gz"
+          }
+        },
+
+        {
+          "Sample_Name": "Y-3W",
+          "Condition": "Control",
+          "Batch": "Chen et al",
+          "File_Name": {
+            "matrix": "/panfs/biopan04/unr_thailand/covid_dataset/data/GSM3087626_DTM-Y_PBMC_methanol-3W+SSC_matrix.mtx.gz",
+            "genes": "/panfs/biopan04/unr_thailand/covid_dataset/data/GSM3087626_DTM-Y_PBMC_methanol-3W+SSC_genes.tsv.gz",
+            "barcodes": "/panfs/biopan04/unr_thailand/covid_dataset/data/GSM3087626_DTM-Y_PBMC_methanol-3W+SSC_barcodes.tsv.gz"
+          }
+        }
+    ]
+ }

@@ -17,6 +17,7 @@
     "minCellsPerGroup": 100,
     "nTopTermEnrichPlot": 5,
     "dotplotCutoff": 0.25,
+    "controlName": "Control",
     "enrichTerms": ["GO_Biological_Process_2023","GO_Molecular_Function_2023"],
     "outputFolder": "example_output",
     "cellType": {

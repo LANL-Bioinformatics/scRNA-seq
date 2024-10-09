@@ -160,6 +160,7 @@ process cellTyping {
     
     def clusterRes = params.clusterResolution != null ? "--cluster_resolution $params.clusterResolution" : ""
     def percentile = params.percentile != null ? "--percentile $params.percentile" : ""
+    def control = params.controlName != null ? "--control_name $params.controlName" : ""
     def cellTypes = ""
     if (params.cellType != null) {
         def types = ""
@@ -172,6 +173,7 @@ process cellTyping {
     $clusterRes \
     $percentile \
     $cellTypes \
+    $control \
     --integrated_data $integratedData \
     --output_folder \$PWD
     """
@@ -212,12 +214,13 @@ process diffGeneExpr {
     path leidenData
 
     output:
+    //only outputs with 2+ groups
     //generic outputs
-    path "*.png"
-    path "*.pdf"
-    path "*.csv"
+    path "*.png", optional:true
+    path "*.pdf", optional:true
+    path "*.csv", optional:true
     //passed downstream
-    path "*_all_genes_differential_gene_expr_results.csv", emit: geneExprResults
+    path "*_all_genes_differential_gene_expr_results.csv", emit: geneExprResults, optional:true
 
     script:
     def padj = params.pAdj != null ? "--p_adj $params.pAdj" : ""
