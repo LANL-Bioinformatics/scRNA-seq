@@ -129,7 +129,7 @@ with plt.rc_context():
 with plt.rc_context():
     fig, ax = plt.subplots(figsize=(10, 7))
     scanpy.pl.umap(adata, color='merged leiden', legend_loc='on data')
-    plt.savefig(os.path.join(out_dir,"UMAP_leiden_automated_names_labeled_on_plot_.png"), bbox_inches='tight')
+    plt.savefig(os.path.join(out_dir,"UMAP_leiden_automated_names_labeled_on_plot.png"), bbox_inches='tight')
 
 
 # Custom colormap
