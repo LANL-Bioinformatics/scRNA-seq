@@ -56,7 +56,7 @@ plt.switch_backend('agg')
 with plt.rc_context():
     fig, ax = plt.subplots(figsize=(10, 7))
     df.plot.barh(stacked=True, color=color_set)
-    plt.legend(loc='center right',bbox_to_anchor=(1.35,0.5)) 
+    plt.legend(loc='center right',bbox_to_anchor=(1.5,0.5)) 
     plt.savefig(os.path.join(out_dir,"cell_type_by_condition_composition_bar_plot.png"), bbox_inches='tight')
 
 

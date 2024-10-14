@@ -66,7 +66,7 @@ for file in files:
         pre_res = gp.prerank(rnk = ranking,
                             gene_sets = term,
                             seed = 6, 
-                            permutation_num = 100) #INCRESE TO AT LEAST 100
+                            permutation_num = 1000) #INCRESE TO AT LEAST 100
 
 
         try:

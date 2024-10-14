@@ -18,7 +18,7 @@ parser = argparse.ArgumentParser(description='Cluster Cell Type')
 
 parser.add_argument('--cluster_resolution', dest='cluster_resolution', type=float, default=0.4)
 parser.add_argument('--percentile', dest='percentile', type=float, default=90)
-parser.add_argument('--cell_types', dest='cell_types', nargs='*', default= ["CD4 T cells: CD4", "CD8 T cells: CD8A, CD8B", "NK cells:FCGR3A,TROBP", "B cells: MS4A1,CD19,CD74,CD79A,IGHM", "Plasma cells: JCHAIN,MZB1,IGHG1", "Proliferating lymphocytes: MKI67,CD3G,FCGR3A", "Monocytes: CD14, FCGR3A,LYZ", "cDCs:HLA-DQA1,SLC38A1", "pDCs:BST2,MAP3K2,TRADD", "Platelets: PF4,PPBP,ITGA2B", "Erythrocytes: HBA2,HBA1,HBB"])
+parser.add_argument('--cell_types', dest='cell_types', nargs='*', default= ["CD4 T cells: CD4", "CD8 T cells: CD8A, CD8B", "NK cells:FCGR3A,TROBP", "B cells: MS4A1,CD19,CD74,CD79A,IGHM", "Plasma cells: JCHAIN,MZB1,IGHG1", "Undefined lymphocytes: PTPRC", "Proliferating lymphocytes: MKI67,CD3G,FCGR3A", "Monocytes: CD14, FCGR3A,LYZ", "cDCs:HLA-DQA1,SLC38A1", "pDCs:BST2,MAP3K2,TRADD", "Platelets: PF4,PPBP,ITGA2B", "Erythrocytes: HBA2,HBA1,HBB"])
 parser.add_argument('--control_name', dest='control_name', default="Control")
 parser.add_argument('--integrated_data', dest= 'integrated_data', required = True)
 parser.add_argument('--output_folder', action="store", dest='out_dir', required=True)
