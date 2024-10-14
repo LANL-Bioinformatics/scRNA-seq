@@ -13,13 +13,6 @@ RUN conda init bash \
 
 RUN conda env create -f environment_v3.yml
 
-# #2 packages have no conda versions, installing into environment with pip
-# RUN conda install pip
-# RUN /opt/conda/envs/10x_covid_py/bin/pip install pydeseq2==0.4.11
-# RUN /opt/conda/envs/10x_covid_py/bin/pip install pertpy==0.9.4
-# #fix pip clobbering files
-# RUN conda install -n 10x_covid_py -c conda-forge numpy=1.26.4 --force-reinstall
-# RUN conda install -n 10x_covid_py -c conda-forge numpy-base=1.26.4 --force-reinstall
 #create packed environment with scripts
 RUN conda install -c conda-forge conda-pack
 
@@ -36,6 +29,7 @@ RUN /venv/bin/conda-unpack
 FROM debian:latest AS runtime
 
 COPY --from=build /venv /venv
+RUN apt-get update && apt-get install -y procps && rm -rf /var/lib/apt/lists/*
 ENV PATH=/venv/bin:$PATH
     
 SHELL ["/bin/bash", "-c"]

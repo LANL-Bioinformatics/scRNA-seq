@@ -64,7 +64,7 @@ def qc_plots_across_groups(adata, out_dir):
         df = pd.DataFrame({'Sample List': x_keys, 'Cells per Sample': x_values, 'Fraction Cells per Sample': x_avg})
         df = df.set_index("Sample List")
         print(df)
-        df.to_csv(out_dir+outcome+'_cell_count_summary.csv') 
+        df.to_csv(os.path.join(out_dir, outcome+'_cell_count_summary.csv')) 
 
     # QC plots comparing all samples
     with plt.rc_context():
