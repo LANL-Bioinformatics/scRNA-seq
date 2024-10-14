@@ -60,7 +60,7 @@ In addition to data, `sc_pipeline.nf` expects two configuration files in JSON fo
 To run the workflow: 
 
 ```
-nextflow run /path/to/sc_pipeline.nf -params-file /path/to/Input_Settings.json
+nextflow run /path/to/sc_pipeline.nf [-with-report] -params-file /path/to/Input_Settings.json
 ```
 
 
